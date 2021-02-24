@@ -1,0 +1,211 @@
+twilio: # Twilio gateway configuration
+  accountId: kuailekaba@gmail.com
+  accountToken: Ta@LnCp7$xBw_RR
+  numbers: # Numbers allocated in Twilio
+    - # First number
+    - # Second number
+    - # Third number
+    - # ...
+    - # Nth number
+  messagingServicesId: MG3333333333333333333333333333
+  localDomain: signal.lxrtalk.com# Domain Twilio can connect back to for calls. Should be domain of your service.
+
+push:
+  queueSize: 200
+
+cache: # Redis server configuration for cache cluster
+  url: http://127.0.0.1:6379
+  replicaUrls: [ "http://127.0.0.1:6379" ]
+
+directory:
+  redis: # Redis server configuration for directory cluster
+    url: http://127.0.0.1:6379
+    replicaUrls: [ "http://127.0.0.1:6379" ]
+  client: # Configuration for interfacing with Contact Discovery Service cluster
+    userAuthenticationTokenSharedSecret: 333# hex-encoded secret shared with CDS used to generate auth tokens for Signal users
+    userAuthenticationTokenUserIdSecret: 444# hex-encoded secret shared among Signal-Servers to obscure user phone numbers from CDS
+  sqs:
+    accessKey: 333      # AWS SQS accessKey
+    accessSecret: 444   # AWS SQS accessSecret
+    queueUrl: https://sqs.ap-southeast-1.amazonaws.com/17093374723/fake       # AWS SQS queue url
+  server:
+    replicationUrl: http://127.0.0.1                # CDS replication endpoint base url
+    replicationPassword: fake           # CDS replication endpoint password
+    replicationCaCertificate: |   #fake
+                -----BEGIN CERTIFICATE-----
+                MIIGCDCCBPCgAwIBAgIId9kHAiU6ZxIwDQYJKoZIhvcNAQELBQAwgZYxCzAJBgNV
+                mYm1yVxw4lLirPPyva9YOqX626RzyKQ0mcOiV0vURjALRiAkNklfpgr877wilvdS
+                dynVUqLbErSibtAh
+                -----END CERTIFICATE-----      # CDS replication endpoint TLS certificate trust root
+
+messageCache:
+  redis: # Redis server configuration for message store cache
+    url: http://127.0.0.1:6379
+    replicaUrls: [ "http://127.0.0.1:6379" ]
+
+messageStore: # Postgresql database configuration for message store
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: srh;MG#sV3S;M9!
+  url: jdbc:postgresql://127.0.0.1:5432/messagedb
+
+awsAttachments: # AWS S3 configuration
+  accessKey: 1
+  accessSecret: 1
+  bucket: 1
+  region: 1
+
+gcpAttachments: # GCP Storage configuration
+  domain: 1
+  email: 1
+  maxSizeInBytes: 1
+  pathPrefix: /
+  rsaSigningKey: 1
+
+abuseDatabase: # Postgresql database configuration
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: srh;MG#sV3S;M9!
+  url: jdbc:postgresql://127.0.0.1:5432/abusedb
+
+accountsDatabase: # Postgresql database configuration
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: srh;MG#sV3S;M9!
+  url: jdbc:postgresql://127.0.0.1:5432/accountsdb
+
+apn: # Apple Push Notifications configuration
+  bundleId: 1
+  pushCertificate: |
+   -----BEGIN CERTIFICATE-----
+   MIIFHTCCAwWgAwIBAgIUHjBWCPPCyuwgnsKhthfJcgYKR0MwDQYJKoZIhvcNAQEL
+   BQAwHTEbMBkGA1UEAwwSc2lnbmFsLmx4cnRhbGsuY29tMCAXDTIxMDIyMzEyNDMx
+   OVoYDzIyOTQxMjA4MTI0MzE5WjAdMRswGQYDVQQDDBJzaWduYWwubHhydGFsay5j
+   b20wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQC+rgh43atIrUWkvt7d
+   wVIBn5cnU8snP1qq7v1sErTsTOnCvjMVGAYFAyNDLicL2T74xlnXLl+jy8miRvEj
+   FN7VIG6enwJaTUNkPKiVgvC9y9NUiVBBtcIxjYCWJsgVmHl8qY65Ev3Rz5av7U/c
+   F5WqHCaWrnOLWmiRt8QElyrrZd2Vqen6i+tR32rXg3d/qimROutQn6c+kTJA3Smx
+   tN2hlQKp7+f50l87lAQJwlIU9EVISZiMSASaRNUJFrRKRRfcATrWvRQvSmklGWRE
+   lyK5UkGFwweA46cTLgv9TMqM9KDeR18+aBPN/JDxnMy1A4H67OIqH6fyTd91bLUM
+   myEi46rHwjMDhMNrQ3/17562Mw5VBN4wex+YiakwIi2SNacxiJuULHYglB49JZ9c
+   KrZWoXd1TCRZRLNWhADHtai0CELbrP2stB6DXDXzR++VOwRtXXrSZTlRSEtz5u6y
+   RngBBHNCcdjXlaWC52822lWo3dW95igUzcpsUlMZXbsmIJF9/To+Ty+22GGLPCxn
+   uJcCAw5vhKkSaq/kd2Ngqxt1+cNUxx5HMmAcIuRI8w5dpVh58vdPuACwYbQrV+mg
+   Uoc37JExlwXcKZ2cb23Ho5yKFHO4xee8jwbcnr7OnkZJekxultk07m4iX2NYFWSD
+   2rxL7tQ3+77wMMdZgCrZ712TqwIDAQABo1MwUTAdBgNVHQ4EFgQUnioNcGlSWWYw
+   FK2RZWlwn2H9CbEwHwYDVR0jBBgwFoAUnioNcGlSWWYwFK2RZWlwn2H9CbEwDwYD
+   VR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAnEpZ/QtHL9L/hfrjxOys
+   GIKYk7P4pSaNOfCR5oPNavU/M7R6EkoV7BE36yfTsrgU3wrK7VkO97GIYQBMJKnv
+   bXGhf30urqjeh9BuS1A6fz2sVFRZntwT/hcmUQtFqBcUIZPXJnnTYcOMwr6VlRet
+   Blwu9t/SAa51o+WCsQ2eI63jY+FnsUzBFhW2/5yXTr750mBnIhHVnQNWDpK2Xdm1
+   xnZDDjkR8yPMNdo16/K2Vqih+CUYFBQE7mqGOYVY9xE2iovHUbyFvYPqHqnjkSXP
+   roDokv010zaEXnGAMYVfjBZa9+uPHOolLrr90Spw6xZTrJheuMZ1AhuNspXkP4wn
+   M9d30xwA814fdxQJDdVZZuzvaO1eLx02mp7j36EI8PtSxgG9mFkO2+LE2ypkG738
+   Lz0756mJ0AzRStOtDAEztnnXIKJam0j9ZjFZCZd7f0uNG0dyv4eomsv06gRPgO3O
+   T7DZYctuMxW7svbwcd1vLJ0qYVA/gbafTYdRNpj0dXjei53KjyNyt97CVSetshOU
+   ODZ3MqVt1YRrgGoX90GyA2Nni1UMVoMZLwdog3JElMxTb9/jyV5M4m4UMDlonwVF
+   w3Cj5Ysa4FeVkFSqtYBXMEbt8hBFbbD+v4vbtcrUwoQiTFxrHqE7auGhrgfqd71M
+   yr8ZX9ZFPCNiV6z6TOBB40k=
+   -----END CERTIFICATE-----
+
+  pushKey: |
+    -----BEGIN PRIVATE KEY-----
+    MIIJQgIBADANBgkqhkiG9w0BAQEFAASCCSwwggkoAgEAAoICAQC+rgh43atIrUWk
+    vt7dwVIBn5cnU8snP1qq7v1sErTsTOnCvjMVGAYFAyNDLicL2T74xlnXLl+jy8mi
+    RvEjFN7VIG6enwJaTUNkPKiVgvC9y9NUiVBBtcIxjYCWJsgVmHl8qY65Ev3Rz5av
+    7U/cF5WqHCaWrnOLWmiRt8QElyrrZd2Vqen6i+tR32rXg3d/qimROutQn6c+kTJA
+    3SmxtN2hlQKp7+f50l87lAQJwlIU9EVISZiMSASaRNUJFrRKRRfcATrWvRQvSmkl
+    GWRElyK5UkGFwweA46cTLgv9TMqM9KDeR18+aBPN/JDxnMy1A4H67OIqH6fyTd91
+    bLUMmyEi46rHwjMDhMNrQ3/17562Mw5VBN4wex+YiakwIi2SNacxiJuULHYglB49
+    JZ9cKrZWoXd1TCRZRLNWhADHtai0CELbrP2stB6DXDXzR++VOwRtXXrSZTlRSEtz
+    5u6yRngBBHNCcdjXlaWC52822lWo3dW95igUzcpsUlMZXbsmIJF9/To+Ty+22GGL
+    PCxnuJcCAw5vhKkSaq/kd2Ngqxt1+cNUxx5HMmAcIuRI8w5dpVh58vdPuACwYbQr
+    V+mgUoc37JExlwXcKZ2cb23Ho5yKFHO4xee8jwbcnr7OnkZJekxultk07m4iX2NY
+    FWSD2rxL7tQ3+77wMMdZgCrZ712TqwIDAQABAoICAFT9RyNwUjcbnC4ZMUcQMtgs
+    ZPgPfj5pG6WSznwMPn4QriSyGByvz4cOZfo8qQS7+ThzWHnz3ocofyAIlNR5KfU+
+    9m9XGnpbc81KyC2T5nACWJiWd6JCPGNP2d+TO518j7HD9ayCTYXmDBkwImdMT9Y5
+    o+2HplKXooJIsWMGagfwKHrb+EFHekTM21dh7rKFiu+Dnn0aHDZkC00kBsCBiEPM
+    IhrSpsgQP4hTqhUbevCCDBtzSj5En2CPi5D4gLWV5FOYbLxoHIYTmZgCoFF+N+j4
+    Q+I2ErMdRUvkO03Um3eGVemdUFOFmkY26/f1Vrzb6mSIjyoNYBM9KHuzT2NmBbc9
+    MOazexkfRvV5hSTKKmXRH1wWCkk0T1qarGsvaHl3RGr83sMo9u6VE6cWEMoKQkVx
+    B+enxrIsqxpTvRzWxYV6M19LL0LveK+ddc9VSozTqrYCuIYDxzY1zatruyg+O7wK
+    kfezsXtxiK38C3Zk6K4CT5iqif/L1NBBVaQLZ12/2dnsPC2tonvwrqCE2a6ab5sW
+    aq50peP92NHZsKbWcQvzWcCqjUMA/sijnxqgfSe5McBKYweNKhs/Toa7FAtHQ2c7
+    wPwr56f+6u5kih5FToo+YF1UOrkutYV74aIXLTFbWepVmCLJfnsj+1XmxrwxrZJQ
+    TtuOCu/e+q/c7zmyM5NRAoIBAQDnIC3gngk3lssXcF7V/8iKTrFUeHF8AnEr28r/
+    RPQeq7NrFbIuio+RX3BguKduomwof1VJ6AYkxWwmrfgrcgn8XWGoZqJKYXcCp4eE
+    VHp8lJcuYxoAWOabmTw1O7OhNROGIgIS2W3NhbQTq4nj5LAHel15V3pJeWpVW5/k
+    D+wsQOr6WmpvuX4gKCcaUdpJT36SKJaHWyT0w8RFQNVsRI2+irGJIGgmOfRVZ/uv
+    2DxaBqQDf8OOWWl6u0rZBugtE88OZjzou9nSFzVlH3iKUvTDssPlTbUAebv1lPLe
+    Zt6XUwfFofIKN1b3T+1T9rMWyoHlUN1DxiRIRfwc8rGqmFh5AoIBAQDTM4QVC3xR
+    d8cSDZ/aOMBIyH9wObknlI/FA37Q3V/pqCw5QP+2XxzWYXs06+SsH/pA527FoXfp
+    fG7LyaAjLJMs4n4bErb1HyHWYm2qOhRD+asJLzfp7U7yG0+0GG1qteXbgwTQq+/F
+    i+5w014ntfqki/1iSJ8F4ByIT/fgH4MfISe7hvRYMNeUeLm7qnGigsUStNCtsNkW
+    SNCJeIVqrVh+DocAoMbvmS8QeD3ya3BDD1ub2TrHuIDGX2wN4MwC3OC87vfT913/
+    Z8mqB+SxiMG/rk0Lgkak0GEkNx5JPj8E2BEaRFejf+fS1SIwrhtt9vW+TyrBT04R
+    ubexfQAXbsxDAoIBAB/rbsqVqNo3hibfiwltAOoxAgaTd8DTqYOQIFHu2PQfbHD+
+    lxQcaMV/88o31k/OOLfDFilV1PthFJWm8x406rIix2j1e7ZgDYqdTnb1H9FyyApM
+    /3tKy9ZzbEBB1YYPCXo92iF2S9bVf1A0IaAKplDyElS+wxHApfHR7JwXottdv9YB
+    hK+XY5bXVMcqxMXZJ7bRyjA5Yzo2izWxRYhlU1ocV3aDtj6JRHhDGxxm9bbNMfuV
+    upE/QfUERssATDJliPQJJKJTxzpfoC0uEnywBkO8vZc+ix/csBuzjXMvq9AkVG9z
+    9TR5/hW7wSAWcxdTsmrUJyrEA6DDoZTx452W2qkCggEBAJGG/84YefMQ24TfCnSt
+    giEktls4CxLw1Rflzq5Qu9Qe40oYNZsOcqptxR20JX9NEX1DexqGpj+mVBnrtoJG
+    JqtY7ZfuD09bwk8cx3/yQSCNmoLbnGV99VXx57uq0UokSFw3LUw0DSVLxGLN4iTu
+    yeQz6cadT6YWxNJQd/ZhAFKk3+HhneBe100g2qorSd22yeCX4uqr3wnx5m+zMgtN
+    oppJnFCceDeEj9+DWvv9d/9dR7xdtJkF0wXdnnD5otmeJOVKrE3MN2LTuyuEANsr
+    5oUTr1bsz4ylYSo5KI9Dat0FnNNCoDiy26R04/gzIAdnkfEuT8GfyaWBGMgd38BF
+    wk0CggEAOI9wuJOjLi8gjut6qZlbO7MwxoeKlGTC6CxWvezqflkQo4pce6YP7nsg
+    Wm1TbEyK5jY76WFF8ZBujmEKM7F4lcTFtWKPZlx6qealxAw2lFGLKb777Paxa/Vt
+    IBNTnIwTEcBWNTPPHNxWNWvtXn9Sep2H7xObqJvX3PK5Uz58Vy8+0DGnNKiwcgjQ
+    hsfPOCgzyOdJKAseieQ+Hw1Fozxdu0IjawlHCVm4l4My9eZKWymqE7QUdHexbJ9n
+    k/kNAy/T4xksy0VjcqQQYDXaPKiuLM6m9IYU3UuS7cOn8kEE3xbkSYbdM5d/qNfy
+    5ljq5ocMKKQUK+LSsScM0NWzBwBkkA==
+    -----END PRIVATE KEY-----
+
+gcm: # GCM Configuration
+  senderId: 1
+  apiKey: 1
+accountDatabaseCrawler:
+    chunkSize: 1000
+    chunkIntervalMs: 80000000
+
+cdn:
+    accessKey: AKIAAAAAABBBBBCCCCCCC
+    accessSecret: QhABCCCCCCCCCCCCCDDDDDDDDDDDDDDDD
+    bucket: fake
+    region: ap-southeast-1
+
+voiceVerification:
+    url: http://127.0.0.1 #fake
+    locales: [ "en-US" ]  #fake
+
+recaptcha:
+    secret: 6LfFFFFFFAAAAAAKKKKKKEEEEEEgJ7kX-pSL
+
+storageService:
+    userAuthenticationTokenSharedSecret: 112233445566 #fake
+
+backupService:
+    userAuthenticationTokenSharedSecret: 778899AABBCC #fake
+
+turn:
+    secret: turnsecret
+    uris:
+        - turn:127.0.0.1:3478?transport=udp
+pushScheduler:
+    url: http://127.0.0.1:6379
+    replicaUrls: [ "http://127.0.0.1:6379" ]
+pubsub: 
+    url: http://127.0.0.1:6379
+    replicaUrls: [ "http://127.0.0.1:6379" ]
+remoteConfig:
+  authorizedTokens: []
+unidentifiedDelivery:
+  certificate: CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTED
+  privateKey:  UMsXVnVox5HSEbhkpgYq5Ez0JCQTnzQkjeqDDqcyWXg=
+  expiresDays: 10
+zkConfig: 
+  serverSecret: MTIzNDU2
+  serverPublic: MTIzNDU2
+  enabled: false
+
