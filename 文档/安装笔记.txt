@@ -1,0 +1,64 @@
+nohup java -jar  target/TextSecureServer-3.21.jar server  config/config.yml 2>&1 &
+
+
+https://www.cnblogs.com/lixiaoran/p/14438428.html
+
+sudo -u postgres psql -c "CREATE USER signal  WITH ENCRYPTED PASSWORD  'srh;MG#sV3S;M9!'
+
+sudo turnserver -a -o -v -n -u test:test -r "signal.lxrtalk.com"
+
+set dh-file=
+
+sudo certbot --authenticator standalone --installer apache -d "signal.lxrtalk.com" --pre-hook "systemctl stop apache2" --post-hook "systemctl start apache2"
+
+https://www.ssllabs.com/ssltest/analyze.html?d=signal.lxrtalk.com
+
+~/Signal-Server/service$ sudo vi config/config.yml
+~/Signal-Server/service$ java -jar target/TextSecureServer-3.21.jar messagedb migrate config/config.yml
+
+keysDatabase:
+　　driverClass: org.postgresql.Driver
+　　user:
+　　password:
+　　url: jdbc:postgresql://127.0.0.1:5432/keysdb
+
+accountsDatabase:
+　　driverClass: org.postgresql.Driver
+　　user:
+　　password:
+　　url: jdbc:postgresql://127.0.0.1:5432/accountdb
+
+read_database:
+　　driverClass: org.postgresql.Driver
+　　user:
+　　password:
+　　url: jdbc:postgresql://127.0.0.1:5432/readdb
+
+配置Sealed Sender的密钥
+更麻烦一点的是unidentifiedDelivery这个功能的配置。这个功能又称为Sealed Sender，即匿名发聊天信息。功能的设计参考https://signal.org/blog/sealed-sender/。这个功能需要证书certificate、私钥privateKey，但并不是PEM等标准格式的。仍然翻一下相关的解析代码，最后会发现Signal Server自带了生成这些数据的命令行参数。具体的代码在service/src/main/java/org/whispersystems/textsecuregcm/workers/CertificateCommand.java这文件中，从这代码可以看出，需要两步走。
+
+第一步：生成CA的证书和私钥。这个CA证书（注意不是CA的私钥）在Signal的客户端中可能也要用到，客户端访问服务器时可以走HTTPS的代理。
+
+java -jar TextSecureServer-3.21.jar certificate --ca
+第二步：利用CA的私钥，生成服务器的证书。
+
+java -jar TextSecureServer-3.21.jar certificate --key  KIdFXRM5zesFYkT44QbUb5f3WHbTU8ErUI38C5k/40A= --id 1
+
+Public key : BeiXJgyjXTvnz4udreNDCKO1jVgTIHeIvQwHSwbDeic8
+Private key: KIdFXRM5zesFYkT44QbUb5f3WHbTU8ErUI38C5k/40A=
+
+Certificate: CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTED
+Private key: UMsXVnVox5HSEbhkpgYq5Ez0JCQTnzQkjeqDDqcyWXg=
+
+
+
+Signal Server的处女Run
+ 初始化数据库，建表（此处暂未深究为什没有处理名为readdb的数据库）：
+
+java -jar target/TextSecureServer-3.21.jar  messagedb  migrate  config/config.yml
+java -jar  target/TextSecureServer-3.21.jar  accountdb  migrate  config/config.yml
+java -jar  target/TextSecureServer-3.21.jar  keysdb     migrate  config/config.yml
+java -jar  target/TextSecureServer-3.21.jar  abusedb    migrate  config/config.yml 
+填满config.yml的各个字段后，尝试运行Signal Server：
+
+java -jar ./service/target/TextSecureServer-3.21.jar server config/config.yml
