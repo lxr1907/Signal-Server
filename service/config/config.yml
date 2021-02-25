@@ -22,8 +22,8 @@ directory:
     url: http://127.0.0.1:6379
     replicaUrls: [ "http://127.0.0.1:6379" ]
   client: # Configuration for interfacing with Contact Discovery Service cluster
-    userAuthenticationTokenSharedSecret: 333# hex-encoded secret shared with CDS used to generate auth tokens for Signal users
-    userAuthenticationTokenUserIdSecret: 444# hex-encoded secret shared among Signal-Servers to obscure user phone numbers from CDS
+    userAuthenticationTokenSharedSecret: abf156f3cf64496f9da2cabca68d95fe # hex-encoded secret shared with CDS used to generate auth tokens for Signal users
+    userAuthenticationTokenUserIdSecret: abf156f3cf64496f9da2cabca68d95fe # hex-encoded secret shared among Signal-Servers to obscure user phone numbers from CDS
   sqs:
     accessKey: 333      # AWS SQS accessKey
     accessSecret: 444   # AWS SQS accessSecret
@@ -32,11 +32,38 @@ directory:
     replicationUrl: http://127.0.0.1                # CDS replication endpoint base url
     replicationPassword: fake           # CDS replication endpoint password
     replicationCaCertificate: |   #fake
-                -----BEGIN CERTIFICATE-----
-                MIIGCDCCBPCgAwIBAgIId9kHAiU6ZxIwDQYJKoZIhvcNAQELBQAwgZYxCzAJBgNV
-                mYm1yVxw4lLirPPyva9YOqX626RzyKQ0mcOiV0vURjALRiAkNklfpgr877wilvdS
-                dynVUqLbErSibtAh
-                -----END CERTIFICATE-----      # CDS replication endpoint TLS certificate trust root
+        -----BEGIN CERTIFICATE-----
+        MIIFiTCCBHGgAwIBAgIIRaC6OlsW2IgwDQYJKoZIhvcNAQEFBQAwgZYxCzAJBgNV
+        BAYTAlVTMRMwEQYDVQQKDApBcHBsZSBJbmMuMSwwKgYDVQQLDCNBcHBsZSBXb3Js
+        ZHdpZGUgRGV2ZWxvcGVyIFJlbGF0aW9uczFEMEIGA1UEAww7QXBwbGUgV29ybGR3
+        aWRlIERldmVsb3BlciBSZWxhdGlvbnMgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkw
+        HhcNMjAwMzE3MTEyMjI2WhcNMjEwMzE3MTEyMjI2WjCBiDEiMCAGCgmSJomT8ixk
+        AQEMEmNvbS5teHpmLnNpZ25hbGlvczFAMD4GA1UEAww3QXBwbGUgRGV2ZWxvcG1l
+        bnQgSU9TIFB1c2ggU2VydmljZXM6IGNvbS5teHpmLnNpZ25hbGlvczETMBEGA1UE
+        CwwKNzdMNjlNRDM4TDELMAkGA1UEBhMCQ04wggEiMA0GCSqGSIb3DQEBAQUAA4IB
+        DwAwggEKAoIBAQDEoOfMnIQlV6Qi4/0iMXb9IfYkykqz9iKd/uEtSTt69VyUk6xv
+        w9MrJHI7AdV4SVLzaAwdPvANJbkd7bQ7HXHs+A/il31DbYycZbPTASgKPg/O2lzE
+        NC2FUG7/OwMiPG2v3WTez7r71kDWmjQcEsMTiW9pDaB0Q1KZWPOyiHB91kdEq5Lk
+        gBXlpPvqUpTuudJpVI69wZH6KqbmfG7Ab697kPqSWXP9Jd4JaF0VXkLx7wC+Bk9Z
+        khsGFGTya9wtRY20kmKfpWV5HBIzpL+BG80W9ayeL26IJav3cY+60UKdQcyFh6EO
+        HgSUahhCSeVMeL96B8VQzlNlfUyYRmGmaRjRAgMBAAGjggHlMIIB4TAJBgNVHRME
+        AjAAMB8GA1UdIwQYMBaAFIgnFwmpthhgi+zruvZHWcVSVKO3MIIBDwYDVR0gBIIB
+        BjCCAQIwgf8GCSqGSIb3Y2QFATCB8TCBwwYIKwYBBQUHAgIwgbYMgbNSZWxpYW5j
+        ZSBvbiB0aGlzIGNlcnRpZmljYXRlIGJ5IGFueSBwYXJ0eSBhc3N1bWVzIGFjY2Vw
+        dGFuY2Ugb2YgdGhlIHRoZW4gYXBwbGljYWJsZSBzdGFuZGFyZCB0ZXJtcyBhbmQg
+        Y29uZGl0aW9ucyBvZiB1c2UsIGNlcnRpZmljYXRlIHBvbGljeSBhbmQgY2VydGlm
+        aWNhdGlvbiBwcmFjdGljZSBzdGF0ZW1lbnRzLjApBggrBgEFBQcCARYdaHR0cDov
+        L3d3dy5hcHBsZS5jb20vYXBwbGVjYS8wEwYDVR0lBAwwCgYIKwYBBQUHAwIwTQYD
+        VR0fBEYwRDBCoECgPoY8aHR0cDovL2RldmVsb3Blci5hcHBsZS5jb20vY2VydGlm
+        aWNhdGlvbmF1dGhvcml0eS93d2RyY2EuY3JsMB0GA1UdDgQWBBR7eizUV3NuLXm9
+        CVI4HdkBL9dkEDALBgNVHQ8EBAMCB4AwEAYKKoZIhvdjZAYDAQQCBQAwDQYJKoZI
+        hvcNAQEFBQADggEBAB029wy1hK8Gscbll+RTiZ31UWlqOTds3Rnc1pYljjTVWsb7
+        pcaPuL4DrGeNNUk/cUsPHuj5SaMcxO+kx7byr7zvXgi6seJezytt8tkFrJYm715c
+        6cRLC9gn6RE/yAUZ4q2wu+eV3/g0Et2wmlCkldPbOI/nJQXOT0xCjGTEe1A3dhuP
+        5onxjmNtiBvYYL285OFuwyHuxcdUAm9XdIdyalYCRVPFS++sai70apZxbv4mEfXI
+        ABWd1dq4whuma5nDhkMVDDPX28xh99Ntc9ztRQikJDoJn/NhngI5ZFLILxrTRQSl
+        p7zTAa69CmztYV0gnuEBQ/PMHaF00j6G/tVPeBo=
+        -----END CERTIFICATE-----
 
 messageCache:
   redis: # Redis server configuration for message store cache
@@ -77,90 +104,66 @@ accountsDatabase: # Postgresql database configuration
 apn: # Apple Push Notifications configuration
   bundleId: 1
   pushCertificate: |
-   -----BEGIN CERTIFICATE-----
-   MIIFHTCCAwWgAwIBAgIUHjBWCPPCyuwgnsKhthfJcgYKR0MwDQYJKoZIhvcNAQEL
-   BQAwHTEbMBkGA1UEAwwSc2lnbmFsLmx4cnRhbGsuY29tMCAXDTIxMDIyMzEyNDMx
-   OVoYDzIyOTQxMjA4MTI0MzE5WjAdMRswGQYDVQQDDBJzaWduYWwubHhydGFsay5j
-   b20wggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQC+rgh43atIrUWkvt7d
-   wVIBn5cnU8snP1qq7v1sErTsTOnCvjMVGAYFAyNDLicL2T74xlnXLl+jy8miRvEj
-   FN7VIG6enwJaTUNkPKiVgvC9y9NUiVBBtcIxjYCWJsgVmHl8qY65Ev3Rz5av7U/c
-   F5WqHCaWrnOLWmiRt8QElyrrZd2Vqen6i+tR32rXg3d/qimROutQn6c+kTJA3Smx
-   tN2hlQKp7+f50l87lAQJwlIU9EVISZiMSASaRNUJFrRKRRfcATrWvRQvSmklGWRE
-   lyK5UkGFwweA46cTLgv9TMqM9KDeR18+aBPN/JDxnMy1A4H67OIqH6fyTd91bLUM
-   myEi46rHwjMDhMNrQ3/17562Mw5VBN4wex+YiakwIi2SNacxiJuULHYglB49JZ9c
-   KrZWoXd1TCRZRLNWhADHtai0CELbrP2stB6DXDXzR++VOwRtXXrSZTlRSEtz5u6y
-   RngBBHNCcdjXlaWC52822lWo3dW95igUzcpsUlMZXbsmIJF9/To+Ty+22GGLPCxn
-   uJcCAw5vhKkSaq/kd2Ngqxt1+cNUxx5HMmAcIuRI8w5dpVh58vdPuACwYbQrV+mg
-   Uoc37JExlwXcKZ2cb23Ho5yKFHO4xee8jwbcnr7OnkZJekxultk07m4iX2NYFWSD
-   2rxL7tQ3+77wMMdZgCrZ712TqwIDAQABo1MwUTAdBgNVHQ4EFgQUnioNcGlSWWYw
-   FK2RZWlwn2H9CbEwHwYDVR0jBBgwFoAUnioNcGlSWWYwFK2RZWlwn2H9CbEwDwYD
-   VR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAnEpZ/QtHL9L/hfrjxOys
-   GIKYk7P4pSaNOfCR5oPNavU/M7R6EkoV7BE36yfTsrgU3wrK7VkO97GIYQBMJKnv
-   bXGhf30urqjeh9BuS1A6fz2sVFRZntwT/hcmUQtFqBcUIZPXJnnTYcOMwr6VlRet
-   Blwu9t/SAa51o+WCsQ2eI63jY+FnsUzBFhW2/5yXTr750mBnIhHVnQNWDpK2Xdm1
-   xnZDDjkR8yPMNdo16/K2Vqih+CUYFBQE7mqGOYVY9xE2iovHUbyFvYPqHqnjkSXP
-   roDokv010zaEXnGAMYVfjBZa9+uPHOolLrr90Spw6xZTrJheuMZ1AhuNspXkP4wn
-   M9d30xwA814fdxQJDdVZZuzvaO1eLx02mp7j36EI8PtSxgG9mFkO2+LE2ypkG738
-   Lz0756mJ0AzRStOtDAEztnnXIKJam0j9ZjFZCZd7f0uNG0dyv4eomsv06gRPgO3O
-   T7DZYctuMxW7svbwcd1vLJ0qYVA/gbafTYdRNpj0dXjei53KjyNyt97CVSetshOU
-   ODZ3MqVt1YRrgGoX90GyA2Nni1UMVoMZLwdog3JElMxTb9/jyV5M4m4UMDlonwVF
-   w3Cj5Ysa4FeVkFSqtYBXMEbt8hBFbbD+v4vbtcrUwoQiTFxrHqE7auGhrgfqd71M
-   yr8ZX9ZFPCNiV6z6TOBB40k=
-   -----END CERTIFICATE-----
-
+      -----BEGIN CERTIFICATE-----
+      MIIFiTCCBHGgAwIBAgIIRaC6OlsW2IgwDQYJKoZIhvcNAQEFBQAwgZYxCzAJBgNV
+      BAYTAlVTMRMwEQYDVQQKDApBcHBsZSBJbmMuMSwwKgYDVQQLDCNBcHBsZSBXb3Js
+      ZHdpZGUgRGV2ZWxvcGVyIFJlbGF0aW9uczFEMEIGA1UEAww7QXBwbGUgV29ybGR3
+      aWRlIERldmVsb3BlciBSZWxhdGlvbnMgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkw
+      HhcNMjAwMzE3MTEyMjI2WhcNMjEwMzE3MTEyMjI2WjCBiDEiMCAGCgmSJomT8ixk
+      AQEMEmNvbS5teHpmLnNpZ25hbGlvczFAMD4GA1UEAww3QXBwbGUgRGV2ZWxvcG1l
+      bnQgSU9TIFB1c2ggU2VydmljZXM6IGNvbS5teHpmLnNpZ25hbGlvczETMBEGA1UE
+      CwwKNzdMNjlNRDM4TDELMAkGA1UEBhMCQ04wggEiMA0GCSqGSIb3DQEBAQUAA4IB
+      DwAwggEKAoIBAQDEoOfMnIQlV6Qi4/0iMXb9IfYkykqz9iKd/uEtSTt69VyUk6xv
+      w9MrJHI7AdV4SVLzaAwdPvANJbkd7bQ7HXHs+A/il31DbYycZbPTASgKPg/O2lzE
+      NC2FUG7/OwMiPG2v3WTez7r71kDWmjQcEsMTiW9pDaB0Q1KZWPOyiHB91kdEq5Lk
+      gBXlpPvqUpTuudJpVI69wZH6KqbmfG7Ab697kPqSWXP9Jd4JaF0VXkLx7wC+Bk9Z
+      khsGFGTya9wtRY20kmKfpWV5HBIzpL+BG80W9ayeL26IJav3cY+60UKdQcyFh6EO
+      HgSUahhCSeVMeL96B8VQzlNlfUyYRmGmaRjRAgMBAAGjggHlMIIB4TAJBgNVHRME
+      AjAAMB8GA1UdIwQYMBaAFIgnFwmpthhgi+zruvZHWcVSVKO3MIIBDwYDVR0gBIIB
+      BjCCAQIwgf8GCSqGSIb3Y2QFATCB8TCBwwYIKwYBBQUHAgIwgbYMgbNSZWxpYW5j
+      ZSBvbiB0aGlzIGNlcnRpZmljYXRlIGJ5IGFueSBwYXJ0eSBhc3N1bWVzIGFjY2Vw
+      dGFuY2Ugb2YgdGhlIHRoZW4gYXBwbGljYWJsZSBzdGFuZGFyZCB0ZXJtcyBhbmQg
+      Y29uZGl0aW9ucyBvZiB1c2UsIGNlcnRpZmljYXRlIHBvbGljeSBhbmQgY2VydGlm
+      aWNhdGlvbiBwcmFjdGljZSBzdGF0ZW1lbnRzLjApBggrBgEFBQcCARYdaHR0cDov
+      L3d3dy5hcHBsZS5jb20vYXBwbGVjYS8wEwYDVR0lBAwwCgYIKwYBBQUHAwIwTQYD
+      VR0fBEYwRDBCoECgPoY8aHR0cDovL2RldmVsb3Blci5hcHBsZS5jb20vY2VydGlm
+      aWNhdGlvbmF1dGhvcml0eS93d2RyY2EuY3JsMB0GA1UdDgQWBBR7eizUV3NuLXm9
+      CVI4HdkBL9dkEDALBgNVHQ8EBAMCB4AwEAYKKoZIhvdjZAYDAQQCBQAwDQYJKoZI
+      hvcNAQEFBQADggEBAB029wy1hK8Gscbll+RTiZ31UWlqOTds3Rnc1pYljjTVWsb7
+      pcaPuL4DrGeNNUk/cUsPHuj5SaMcxO+kx7byr7zvXgi6seJezytt8tkFrJYm715c
+      6cRLC9gn6RE/yAUZ4q2wu+eV3/g0Et2wmlCkldPbOI/nJQXOT0xCjGTEe1A3dhuP
+      5onxjmNtiBvYYL285OFuwyHuxcdUAm9XdIdyalYCRVPFS++sai70apZxbv4mEfXI
+      ABWd1dq4whuma5nDhkMVDDPX28xh99Ntc9ztRQikJDoJn/NhngI5ZFLILxrTRQSl
+      p7zTAa69CmztYV0gnuEBQ/PMHaF00j6G/tVPeBo=
+      -----END CERTIFICATE-----
   pushKey: |
-    -----BEGIN PRIVATE KEY-----
-    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
-    5ljq5ocMKKQUK+LSsScM0NWzBwBkkA==
-    -----END PRIVATE KEY-----
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEowIBAAKCAQEAqGyrTpG3gSTQkNLWHWxfSm+x9HXT4MyuFW+wchztkpk9UKex
+    too+sKtu4ZMNuIzHAQ24bCJErYwB5L2uBBvyKSjVGfKrfZ6y2b74D4qqRJKFOKYv
+    iGtAdqiS3PbATBftGngUxWJl6QbCp0HJ8NKxqYXqFzKt4jQBqRqdfCQkGkkUztpy
+    8ORASae7Paop7p9BixAUpro8MFf6pMH6sXIKISPZCPorSsibLx+z61mv1QSM5mwV
+    tqMSFpI9SFECZGMKXHGBiVbc+5VfMQO31Prg1/4wJUjR29+jczOKvFqajIzNeZpo
+    nrPI7B9VdTPqaqCJzkwMDE/XGnr1NE1FbYHkuQIDAQABAoIBAA6iEmgrJORljHFo
+    wA2iYs0W00FIE3aOkflu0Me5V7LK+ZbOWxRfAn9bBbE3k5ObN5cR2BodCBaD+Y4k
+    JMBapTmKQKmWeevaI/PjMa43//8hM83uMmcJ2nn0v33POnniAkmwcS2NFQmf+r2J
+    a8Aurhzqc6I8Vvs2RYapt1EX2sMlvjiaCRaGjlj2lBUbrteoOQkTB9148xhUM7Vo
+    hSvdbc6eVhjDiBxr3UKpp4XTTaebhmB2WhaVmM5liJ9dWO9YzpMfTxqr7Y56Y90b
+    fFM/2lYnTYCYNN9sbUBDl5dvmXIOwl9WHFsXwCDkoXNQ7KJ8vsn1pMNt2ITUsCsa
+    U7A89wECgYEA2UX8pcjVHfcgOjGmg9/kevzW9qsnNrghxGtDA1SmkchcF71YqaNR
+    TEsv96xSoy0AAVHOe/xOVe7I6jtvN6Uso6og/MVU6b/awrFsOzRHjJAMAIEp7ccQ
+    ScSuGyqP0p0PGbtw/QUbC4gYIX/taQ3QchTlUF5mmw/mjg5uss2+aWkCgYEAxnG+
+    4hUaJ6Yz1QuqRWyOrx5FTcwPcazBlbx/es6bBLVkAKOWrURgTZuZrJ+nTxDPflzs
+    QUuQjwQpwwydFIoU9GmTOn5GGUA6MPpFU4BpWCWz+jvT1RTXaagCVxC0WfrPx25K
+    tEpffww7nERMLCVFSjola1VQMcKXDjorPP7eZtECgYADuRpKMPXN7KUluiITUmvU
+    265HTcl/O4qAliHw1auBBgDl+z2gsoa7GvK4eMB1wVilrSQvpbQl7tCMivYt6uun
+    5ktoaW06ECqMeYPUQ+IR+4npHE1+oJGb4f3lw0XxovVWSIr4GvVKrktTj6Ce0zjG
+    K6t+RA/YCl62AnNNJw9jOQKBgQCo6yXa+K981KMGVJmp4tBKDHBd2rfCwZU/SmcR
+    OFEIXwcy7A1UjAGVzj+vi281hE+7dom8wv/YXWjXGSOU2j0gF8Y1Ykt1LxDZpA/j
+    FkmVuPJMrSSSGt2KmHL1fcinVzIKxr1cXnqPgPA1AoX8hfVHS9uSU9qhoMxIVgd8
+    Mk9KIQKBgExZRkE8ariKNkB1mIdnYjJjRzfzMwS03JVjHXvU+AGBXauLMi/eq9N+
+    iaQfdHgjJwAavMdQ3mZkCZ+McmqanqWaIRzNTpbQB9vTvnL+2uVf9Bz5BVk7msX+
+    eqDhtWRnO3WfGVCosaR6UPyBbHqgGVafeX4NVETo5CkfAePwRHM2
+    -----END RSA PRIVATE KEY-----
 
 gcm: # GCM Configuration
   senderId: 1
@@ -205,7 +208,15 @@ unidentifiedDelivery:
   privateKey:  UMsXVnVox5HSEbhkpgYq5Ez0JCQTnzQkjeqDDqcyWXg=
   expiresDays: 10
 zkConfig: 
-  serverSecret: MTIzNDU2
+  serverSecret: |-
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTEDE7oMTED1D1
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTEDE7oMTED2D1
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTEDE7oMTED3D1
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTEDE7oMTED4D1
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTEDE7oMTED5D
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTEDE7oMTED6D
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOE7oMTEDE7oMTED7D
+    CiUIARIhBRPXsbgAzCdKBTHUqU05uFQe99LY2wz03zzDsjfOEf0UEkCiOVNS0Gz14cRQAoVhKScEPpmQvbddWP50g6uy7VZKnaagnxSZMyECNSisEF9XAz/uMwOUkP7tc2sGOEoMTEDE7oMTED78D
   serverPublic: MTIzNDU2
   enabled: false
 
