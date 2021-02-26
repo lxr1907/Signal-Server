@@ -16,3 +16,4 @@ service/config/testing.yml
 .opsmanage
 put.sh
 /.project
+/bin/
