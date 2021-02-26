@@ -69,23 +69,25 @@ public class ActiveUserCounter extends AccountDatabaseCrawlerListener {
 		long intervalTallies[] = new long[INTERVALS.length];
 		ActiveUserTally activeUserTally = getFinalTallies();
 		Map<String, long[]> platforms = activeUserTally.getPlatforms();
-
-		platforms.forEach((platform, platformTallies) -> {
-			for (int i = 0; i < INTERVALS.length; i++) {
-				final long tally = platformTallies[i];
-				metrics.register(metricKey(platform, INTERVALS[i]), (Gauge<Long>) () -> tally);
-				intervalTallies[i] += tally;
-			}
-		});
+		if (platforms != null) {
+			platforms.forEach((platform, platformTallies) -> {
+				for (int i = 0; i < INTERVALS.length; i++) {
+					final long tally = platformTallies[i];
+					metrics.register(metricKey(platform, INTERVALS[i]), (Gauge<Long>) () -> tally);
+					intervalTallies[i] += tally;
+				}
+			});
+		}
 
 		Map<String, long[]> countries = activeUserTally.getCountries();
-		countries.forEach((country, countryTallies) -> {
-			for (int i = 0; i < INTERVALS.length; i++) {
-				final long tally = countryTallies[i];
-				metrics.register(metricKey(country, INTERVALS[i]), (Gauge<Long>) () -> tally);
-			}
-		});
-
+		if (countries != null) {
+			countries.forEach((country, countryTallies) -> {
+				for (int i = 0; i < INTERVALS.length; i++) {
+					final long tally = countryTallies[i];
+					metrics.register(metricKey(country, INTERVALS[i]), (Gauge<Long>) () -> tally);
+				}
+			});
+		}
 		for (int i = 0; i < INTERVALS.length; i++) {
 			final long intervalTotal = intervalTallies[i];
 			metrics.register(metricKey(INTERVALS[i]), (Gauge<Long>) () -> intervalTotal);
