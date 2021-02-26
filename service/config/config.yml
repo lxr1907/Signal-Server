@@ -1,6 +1,6 @@
 twilio: # Twilio gateway configuration
-  accountId: kuailekaba@gmail.com
-  accountToken: Ta@LnCp7$xBw_RR
+  accountId: AC854183d264ba2198f8051790c58e1a25
+  accountToken: 0abfc7b56b7840b5c042a31279bfbf1d
   numbers: # Numbers allocated in Twilio
     - # First number
     - # Second number
@@ -8,7 +8,7 @@ twilio: # Twilio gateway configuration
     - # ...
     - # Nth number
   messagingServicesId: MG3333333333333333333333333333
-  localDomain: signal.lxrtalk.com# Domain Twilio can connect back to for calls. Should be domain of your service.
+  localDomain: signal.lxrtalk.com # Domain Twilio can connect back to for calls. Should be domain of your service.
 
 push:
   queueSize: 200
