@@ -643,9 +643,10 @@ public class AccountController {
       return new VerificationCode(testDevices.get(number));
     }
 
-    SecureRandom random = new SecureRandom();
-    int randomInt       = 100000 + random.nextInt(900000);
-    return new VerificationCode(randomInt);
+    //SecureRandom random = new SecureRandom();
+    //int randomInt       = 100000 + random.nextInt(900000);
+    //验证码暂时直接设置为123456
+    return new VerificationCode(123456);
   }
 
   private String generatePushChallenge() {
