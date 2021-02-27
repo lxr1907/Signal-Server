@@ -150,259 +150,339 @@ import static com.codahale.metrics.MetricRegistry.name;
 
 public class WhisperServerService extends Application<WhisperServerConfiguration> {
 
-  static {
-    Security.addProvider(new BouncyCastleProvider());
-  }
+	static {
+		Security.addProvider(new BouncyCastleProvider());
+	}
 
-  @Override
-  public void initialize(Bootstrap<WhisperServerConfiguration> bootstrap) {
-    bootstrap.addCommand(new VacuumCommand());
-    bootstrap.addCommand(new DeleteUserCommand());
-    bootstrap.addCommand(new CertificateCommand());
-    bootstrap.addCommand(new ZkParamsCommand());
+	@Override
+	public void initialize(Bootstrap<WhisperServerConfiguration> bootstrap) {
+		bootstrap.addCommand(new VacuumCommand());
+		bootstrap.addCommand(new DeleteUserCommand());
+		bootstrap.addCommand(new CertificateCommand());
+		bootstrap.addCommand(new ZkParamsCommand());
 
-    bootstrap.addBundle(new NameableMigrationsBundle<WhisperServerConfiguration>("accountdb", "accountsdb.xml") {
-      @Override
-      public DataSourceFactory getDataSourceFactory(WhisperServerConfiguration configuration) {
-        return configuration.getAccountsDatabaseConfiguration();
-      }
-    });
+		bootstrap.addBundle(new NameableMigrationsBundle<WhisperServerConfiguration>("accountdb", "accountsdb.xml") {
+			@Override
+			public DataSourceFactory getDataSourceFactory(WhisperServerConfiguration configuration) {
+				return configuration.getAccountsDatabaseConfiguration();
+			}
+		});
 
+		bootstrap.addBundle(new NameableMigrationsBundle<WhisperServerConfiguration>("messagedb", "messagedb.xml") {
+			@Override
+			public DataSourceFactory getDataSourceFactory(WhisperServerConfiguration configuration) {
+				return configuration.getMessageStoreConfiguration();
+			}
+		});
 
-    bootstrap.addBundle(new NameableMigrationsBundle<WhisperServerConfiguration>("messagedb", "messagedb.xml") {
-      @Override
-      public DataSourceFactory getDataSourceFactory(WhisperServerConfiguration configuration) {
-        return configuration.getMessageStoreConfiguration();
-      }
-    });
+		bootstrap.addBundle(new NameableMigrationsBundle<WhisperServerConfiguration>("abusedb", "abusedb.xml") {
+			@Override
+			public PooledDataSourceFactory getDataSourceFactory(WhisperServerConfiguration configuration) {
+				return configuration.getAbuseDatabaseConfiguration();
+			}
+		});
+	}
 
-    bootstrap.addBundle(new NameableMigrationsBundle<WhisperServerConfiguration>("abusedb", "abusedb.xml") {
-      @Override
-      public PooledDataSourceFactory getDataSourceFactory(WhisperServerConfiguration configuration) {
-        return configuration.getAbuseDatabaseConfiguration();
-      }
-    });
-  }
+	@Override
+	public String getName() {
+		return "whisper-server";
+	}
 
-  @Override
-  public String getName() {
-    return "whisper-server";
-  }
+	@Override
+	public void run(WhisperServerConfiguration config, Environment environment) throws Exception {
+		SharedMetricRegistries.add(Constants.METRICS_NAME, environment.metrics());
+		environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		environment.getObjectMapper().setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
+		environment.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
 
-  @Override
-  public void run(WhisperServerConfiguration config, Environment environment)
-      throws Exception
-  {
-    SharedMetricRegistries.add(Constants.METRICS_NAME, environment.metrics());
-    environment.getObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-    environment.getObjectMapper().setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.NONE);
-    environment.getObjectMapper().setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+		JdbiFactory jdbiFactory = new JdbiFactory(DefaultNameStrategy.CHECK_EMPTY);
+		Jdbi accountJdbi = jdbiFactory.build(environment, config.getAccountsDatabaseConfiguration(), "accountdb");
+		Jdbi messageJdbi = jdbiFactory.build(environment, config.getMessageStoreConfiguration(), "messagedb");
+		Jdbi abuseJdbi = jdbiFactory.build(environment, config.getAbuseDatabaseConfiguration(), "abusedb");
 
-    JdbiFactory jdbiFactory = new JdbiFactory(DefaultNameStrategy.CHECK_EMPTY);
-    Jdbi        accountJdbi = jdbiFactory.build(environment, config.getAccountsDatabaseConfiguration(), "accountdb");
-    Jdbi        messageJdbi = jdbiFactory.build(environment, config.getMessageStoreConfiguration(), "messagedb" );
-    Jdbi        abuseJdbi   = jdbiFactory.build(environment, config.getAbuseDatabaseConfiguration(), "abusedb"  );
+		FaultTolerantDatabase accountDatabase = new FaultTolerantDatabase("accounts_database", accountJdbi,
+				config.getAccountsDatabaseConfiguration().getCircuitBreakerConfiguration());
+		FaultTolerantDatabase messageDatabase = new FaultTolerantDatabase("message_database", messageJdbi,
+				config.getMessageStoreConfiguration().getCircuitBreakerConfiguration());
+		FaultTolerantDatabase abuseDatabase = new FaultTolerantDatabase("abuse_database", abuseJdbi,
+				config.getAbuseDatabaseConfiguration().getCircuitBreakerConfiguration());
 
-    FaultTolerantDatabase accountDatabase = new FaultTolerantDatabase("accounts_database", accountJdbi, config.getAccountsDatabaseConfiguration().getCircuitBreakerConfiguration());
-    FaultTolerantDatabase messageDatabase = new FaultTolerantDatabase("message_database", messageJdbi, config.getMessageStoreConfiguration().getCircuitBreakerConfiguration());
-    FaultTolerantDatabase abuseDatabase   = new FaultTolerantDatabase("abuse_database", abuseJdbi, config.getAbuseDatabaseConfiguration().getCircuitBreakerConfiguration());
+		Accounts accounts = new Accounts(accountDatabase);
+		PendingAccounts pendingAccounts = new PendingAccounts(accountDatabase);
+		PendingDevices pendingDevices = new PendingDevices(accountDatabase);
+		Usernames usernames = new Usernames(accountDatabase);
+		ReservedUsernames reservedUsernames = new ReservedUsernames(accountDatabase);
+		Profiles profiles = new Profiles(accountDatabase);
+		Keys keys = new Keys(accountDatabase);
+		Messages messages = new Messages(messageDatabase);
+		AbusiveHostRules abusiveHostRules = new AbusiveHostRules(abuseDatabase);
+		RemoteConfigs remoteConfigs = new RemoteConfigs(accountDatabase);
 
-    Accounts          accounts          = new Accounts(accountDatabase);
-    PendingAccounts   pendingAccounts   = new PendingAccounts(accountDatabase);
-    PendingDevices    pendingDevices    = new PendingDevices (accountDatabase);
-    Usernames         usernames         = new Usernames(accountDatabase);
-    ReservedUsernames reservedUsernames = new ReservedUsernames(accountDatabase);
-    Profiles          profiles          = new Profiles(accountDatabase);
-    Keys              keys              = new Keys(accountDatabase);
-    Messages          messages          = new Messages(messageDatabase);
-    AbusiveHostRules  abusiveHostRules  = new AbusiveHostRules(abuseDatabase);
-    RemoteConfigs     remoteConfigs     = new RemoteConfigs(accountDatabase);
+		RedisClientFactory cacheClientFactory = new RedisClientFactory("main_cache",
+				config.getCacheConfiguration().getUrl(), config.getCacheConfiguration().getReplicaUrls(),
+				config.getCacheConfiguration().getCircuitBreakerConfiguration());
+		RedisClientFactory pubSubClientFactory = new RedisClientFactory("pubsub_cache",
+				config.getPubsubCacheConfiguration().getUrl(), config.getPubsubCacheConfiguration().getReplicaUrls(),
+				config.getPubsubCacheConfiguration().getCircuitBreakerConfiguration());
+		RedisClientFactory directoryClientFactory = new RedisClientFactory("directory_cache",
+				config.getDirectoryConfiguration().getRedisConfiguration().getUrl(),
+				config.getDirectoryConfiguration().getRedisConfiguration().getReplicaUrls(),
+				config.getDirectoryConfiguration().getRedisConfiguration().getCircuitBreakerConfiguration());
+		RedisClientFactory messagesClientFactory = new RedisClientFactory("message_cache",
+				config.getMessageCacheConfiguration().getRedisConfiguration().getUrl(),
+				config.getMessageCacheConfiguration().getRedisConfiguration().getReplicaUrls(),
+				config.getMessageCacheConfiguration().getRedisConfiguration().getCircuitBreakerConfiguration());
+		RedisClientFactory pushSchedulerClientFactory = new RedisClientFactory("push_scheduler_cache",
+				config.getPushScheduler().getUrl(), config.getPushScheduler().getReplicaUrls(),
+				config.getPushScheduler().getCircuitBreakerConfiguration());
 
-    RedisClientFactory cacheClientFactory         = new RedisClientFactory("main_cache", config.getCacheConfiguration().getUrl(), config.getCacheConfiguration().getReplicaUrls(), config.getCacheConfiguration().getCircuitBreakerConfiguration());
-    RedisClientFactory pubSubClientFactory        = new RedisClientFactory("pubsub_cache", config.getPubsubCacheConfiguration().getUrl(), config.getPubsubCacheConfiguration().getReplicaUrls(), config.getPubsubCacheConfiguration().getCircuitBreakerConfiguration());
-    RedisClientFactory directoryClientFactory     = new RedisClientFactory("directory_cache", config.getDirectoryConfiguration().getRedisConfiguration().getUrl(), config.getDirectoryConfiguration().getRedisConfiguration().getReplicaUrls(), config.getDirectoryConfiguration().getRedisConfiguration().getCircuitBreakerConfiguration());
-    RedisClientFactory messagesClientFactory      = new RedisClientFactory("message_cache", config.getMessageCacheConfiguration().getRedisConfiguration().getUrl(), config.getMessageCacheConfiguration().getRedisConfiguration().getReplicaUrls(), config.getMessageCacheConfiguration().getRedisConfiguration().getCircuitBreakerConfiguration());
-    RedisClientFactory pushSchedulerClientFactory = new RedisClientFactory("push_scheduler_cache", config.getPushScheduler().getUrl(), config.getPushScheduler().getReplicaUrls(), config.getPushScheduler().getCircuitBreakerConfiguration());
+		ReplicatedJedisPool cacheClient = cacheClientFactory.getRedisClientPool();
+		ReplicatedJedisPool pubsubClient = pubSubClientFactory.getRedisClientPool();
+		ReplicatedJedisPool directoryClient = directoryClientFactory.getRedisClientPool();
+		ReplicatedJedisPool messagesClient = messagesClientFactory.getRedisClientPool();
+		ReplicatedJedisPool pushSchedulerClient = pushSchedulerClientFactory.getRedisClientPool();
 
-    ReplicatedJedisPool cacheClient         = cacheClientFactory.getRedisClientPool();
-    ReplicatedJedisPool pubsubClient        = pubSubClientFactory.getRedisClientPool();
-    ReplicatedJedisPool directoryClient     = directoryClientFactory.getRedisClientPool();
-    ReplicatedJedisPool messagesClient      = messagesClientFactory.getRedisClientPool();
-    ReplicatedJedisPool pushSchedulerClient = pushSchedulerClientFactory.getRedisClientPool();
+		DirectoryManager directory = new DirectoryManager(directoryClient);
+		DirectoryQueue directoryQueue = new DirectoryQueue(config.getDirectoryConfiguration().getSqsConfiguration());
+		PendingAccountsManager pendingAccountsManager = new PendingAccountsManager(pendingAccounts, cacheClient);
+		PendingDevicesManager pendingDevicesManager = new PendingDevicesManager(pendingDevices, cacheClient);
+		AccountsManager accountsManager = new AccountsManager(accounts, directory, cacheClient);
+		UsernamesManager usernamesManager = new UsernamesManager(usernames, reservedUsernames, cacheClient);
+		ProfilesManager profilesManager = new ProfilesManager(profiles, cacheClient);
+		MessagesCache messagesCache = new MessagesCache(messagesClient, messages, accountsManager,
+				config.getMessageCacheConfiguration().getPersistDelayMinutes());
+		MessagesManager messagesManager = new MessagesManager(messages, messagesCache);
+		RemoteConfigsManager remoteConfigsManager = new RemoteConfigsManager(remoteConfigs);
+		DeadLetterHandler deadLetterHandler = new DeadLetterHandler(messagesManager);
+		DispatchManager dispatchManager = new DispatchManager(pubSubClientFactory, Optional.of(deadLetterHandler));
+		PubSubManager pubSubManager = new PubSubManager(pubsubClient, dispatchManager);
+		APNSender apnSender = new APNSender(accountsManager, config.getApnConfiguration());
+		GCMSender gcmSender = new GCMSender(accountsManager, config.getGcmConfiguration().getApiKey());
+		WebsocketSender websocketSender = new WebsocketSender(messagesManager, pubSubManager);
+		RateLimiters rateLimiters = new RateLimiters(config.getLimitsConfiguration(), cacheClient);
 
-    DirectoryManager           directory                  = new DirectoryManager(directoryClient);
-    DirectoryQueue             directoryQueue             = new DirectoryQueue(config.getDirectoryConfiguration().getSqsConfiguration());
-    PendingAccountsManager     pendingAccountsManager     = new PendingAccountsManager(pendingAccounts, cacheClient);
-    PendingDevicesManager      pendingDevicesManager      = new PendingDevicesManager (pendingDevices, cacheClient );
-    AccountsManager            accountsManager            = new AccountsManager(accounts, directory, cacheClient);
-    UsernamesManager           usernamesManager           = new UsernamesManager(usernames, reservedUsernames, cacheClient);
-    ProfilesManager            profilesManager            = new ProfilesManager(profiles, cacheClient);
-    MessagesCache              messagesCache              = new MessagesCache(messagesClient, messages, accountsManager, config.getMessageCacheConfiguration().getPersistDelayMinutes());
-    MessagesManager            messagesManager            = new MessagesManager(messages, messagesCache);
-    RemoteConfigsManager       remoteConfigsManager       = new RemoteConfigsManager(remoteConfigs);
-    DeadLetterHandler          deadLetterHandler          = new DeadLetterHandler(messagesManager);
-    DispatchManager            dispatchManager            = new DispatchManager(pubSubClientFactory, Optional.of(deadLetterHandler));
-    PubSubManager              pubSubManager              = new PubSubManager(pubsubClient, dispatchManager);
-    APNSender                  apnSender                  = new APNSender(accountsManager, config.getApnConfiguration());
-    GCMSender                  gcmSender                  = new GCMSender(accountsManager, config.getGcmConfiguration().getApiKey());
-    WebsocketSender            websocketSender            = new WebsocketSender(messagesManager, pubSubManager);
-    RateLimiters               rateLimiters               = new RateLimiters(config.getLimitsConfiguration(), cacheClient);
+		AccountAuthenticator accountAuthenticator = new AccountAuthenticator(accountsManager);
+		DisabledPermittedAccountAuthenticator disabledPermittedAccountAuthenticator = new DisabledPermittedAccountAuthenticator(
+				accountsManager);
 
-    AccountAuthenticator                  accountAuthenticator                  = new AccountAuthenticator(accountsManager);
-    DisabledPermittedAccountAuthenticator disabledPermittedAccountAuthenticator = new DisabledPermittedAccountAuthenticator(accountsManager);
+		ExternalServiceCredentialGenerator directoryCredentialsGenerator = new ExternalServiceCredentialGenerator(
+				config.getDirectoryConfiguration().getDirectoryClientConfiguration()
+						.getUserAuthenticationTokenSharedSecret(),
+				config.getDirectoryConfiguration().getDirectoryClientConfiguration()
+						.getUserAuthenticationTokenUserIdSecret(),
+				true);
 
-    ExternalServiceCredentialGenerator directoryCredentialsGenerator = new ExternalServiceCredentialGenerator(config.getDirectoryConfiguration().getDirectoryClientConfiguration().getUserAuthenticationTokenSharedSecret(),
-                                                                                                              config.getDirectoryConfiguration().getDirectoryClientConfiguration().getUserAuthenticationTokenUserIdSecret(),
-                                                                                                              true);
+		ExternalServiceCredentialGenerator storageCredentialsGenerator = new ExternalServiceCredentialGenerator(
+				config.getSecureStorageServiceConfiguration().getUserAuthenticationTokenSharedSecret(), new byte[0],
+				false);
+		ExternalServiceCredentialGenerator backupCredentialsGenerator = new ExternalServiceCredentialGenerator(
+				config.getSecureBackupServiceConfiguration().getUserAuthenticationTokenSharedSecret(), new byte[0],
+				false);
 
-    ExternalServiceCredentialGenerator storageCredentialsGenerator = new ExternalServiceCredentialGenerator(config.getSecureStorageServiceConfiguration().getUserAuthenticationTokenSharedSecret(), new byte[0], false);
-    ExternalServiceCredentialGenerator backupCredentialsGenerator  = new ExternalServiceCredentialGenerator(config.getSecureBackupServiceConfiguration().getUserAuthenticationTokenSharedSecret(), new byte[0], false);
+		ApnFallbackManager apnFallbackManager = new ApnFallbackManager(pushSchedulerClient, apnSender, accountsManager);
+		TwilioSmsSender twilioSmsSender = new TwilioSmsSender(config.getTwilioConfiguration());
+		SmsSender smsSender = new SmsSender(twilioSmsSender);
+		PushSender pushSender = new PushSender(apnFallbackManager, gcmSender, apnSender, websocketSender,
+				config.getPushConfiguration().getQueueSize());
+		ReceiptSender receiptSender = new ReceiptSender(accountsManager, pushSender);
+		TurnTokenGenerator turnTokenGenerator = new TurnTokenGenerator(config.getTurnConfiguration());
+		RecaptchaClient recaptchaClient = new RecaptchaClient(config.getRecaptchaConfiguration().getSecret());
 
-    ApnFallbackManager       apnFallbackManager  = new ApnFallbackManager(pushSchedulerClient, apnSender, accountsManager);
-    TwilioSmsSender          twilioSmsSender     = new TwilioSmsSender(config.getTwilioConfiguration());
-    SmsSender                smsSender           = new SmsSender(twilioSmsSender);
-    PushSender               pushSender          = new PushSender(apnFallbackManager, gcmSender, apnSender, websocketSender, config.getPushConfiguration().getQueueSize());
-    ReceiptSender            receiptSender       = new ReceiptSender(accountsManager, pushSender);
-    TurnTokenGenerator       turnTokenGenerator  = new TurnTokenGenerator(config.getTurnConfiguration());
-    RecaptchaClient          recaptchaClient     = new RecaptchaClient(config.getRecaptchaConfiguration().getSecret());
+		/*
+		 * 暂时屏蔽联系人发现服务CDS的查询。
+		 * Signal的CDS（联系人发现服务）对于部署者应该是个大坑。 为什么这么说呢？CDS一般并不和Signal
+		 * Server部署在一台机器上，而是使用独立的特殊硬件来保证其安全性， 也就是Intel
+		 * SGX。SGX能创建硬件隔离区域，称为enclave（中文名叫“飞地”）。
+		 * 目前云服务提供商中只有微软Azure和Intel合作提供了云上的SGX的试用环境，而且有地理区域限制。
+		 * 如果搞不到Azure的SGX环境，只能购买支持SGX的Intel机器。
+		 */
+		// DirectoryReconciliationClient directoryReconciliationClient = new
+		// DirectoryReconciliationClient(config.getDirectoryConfiguration().getDirectoryServerConfiguration());
 
+		ActiveUserCounter activeUserCounter = new ActiveUserCounter(config.getMetricsFactory(), cacheClient);
+		// DirectoryReconciler directoryReconciler = new
+		// DirectoryReconciler(directoryReconciliationClient, directory);
+		AccountCleaner accountCleaner = new AccountCleaner(accountsManager, directoryQueue);
+		PushFeedbackProcessor pushFeedbackProcessor = new PushFeedbackProcessor(accountsManager, directoryQueue);
+		//
+		// List<AccountDatabaseCrawlerListener> accountDatabaseCrawlerListeners =
+		// List.of(pushFeedbackProcessor, activeUserCounter, directoryReconciler,
+		// accountCleaner);
+		List<AccountDatabaseCrawlerListener> accountDatabaseCrawlerListeners = List.of(pushFeedbackProcessor,
+				activeUserCounter, accountCleaner);
 
-    DirectoryReconciliationClient directoryReconciliationClient = new DirectoryReconciliationClient(config.getDirectoryConfiguration().getDirectoryServerConfiguration());
+		AccountDatabaseCrawlerCache accountDatabaseCrawlerCache = new AccountDatabaseCrawlerCache(cacheClient);
+		AccountDatabaseCrawler accountDatabaseCrawler = new AccountDatabaseCrawler(accountsManager,
+				accountDatabaseCrawlerCache, accountDatabaseCrawlerListeners,
+				config.getAccountDatabaseCrawlerConfiguration().getChunkSize(),
+				config.getAccountDatabaseCrawlerConfiguration().getChunkIntervalMs());
 
-    ActiveUserCounter                    activeUserCounter               = new ActiveUserCounter(config.getMetricsFactory(), cacheClient);
-    DirectoryReconciler                  directoryReconciler             = new DirectoryReconciler(directoryReconciliationClient, directory);
-    AccountCleaner                       accountCleaner                  = new AccountCleaner(accountsManager, directoryQueue);
-    PushFeedbackProcessor                pushFeedbackProcessor           = new PushFeedbackProcessor(accountsManager, directoryQueue);
-    List<AccountDatabaseCrawlerListener> accountDatabaseCrawlerListeners = List.of(pushFeedbackProcessor, activeUserCounter, directoryReconciler, accountCleaner);
+		messagesCache.setPubSubManager(pubSubManager, pushSender);
 
-    AccountDatabaseCrawlerCache accountDatabaseCrawlerCache = new AccountDatabaseCrawlerCache(cacheClient);
-    AccountDatabaseCrawler      accountDatabaseCrawler      = new AccountDatabaseCrawler(accountsManager, accountDatabaseCrawlerCache, accountDatabaseCrawlerListeners, config.getAccountDatabaseCrawlerConfiguration().getChunkSize(), config.getAccountDatabaseCrawlerConfiguration().getChunkIntervalMs());
+		apnSender.setApnFallbackManager(apnFallbackManager);
+		environment.lifecycle().manage(apnFallbackManager);
+		environment.lifecycle().manage(pubSubManager);
+		environment.lifecycle().manage(pushSender);
+		environment.lifecycle().manage(messagesCache);
+		environment.lifecycle().manage(accountDatabaseCrawler);
+		environment.lifecycle().manage(remoteConfigsManager);
 
-    messagesCache.setPubSubManager(pubSubManager, pushSender);
+		AWSCredentials credentials = new BasicAWSCredentials(config.getCdnConfiguration().getAccessKey(),
+				config.getCdnConfiguration().getAccessSecret());
+		AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(credentials);
+		AmazonS3 cdnS3Client = AmazonS3Client.builder().withCredentials(credentialsProvider)
+				.withRegion(config.getCdnConfiguration().getRegion()).build();
+		PostPolicyGenerator profileCdnPolicyGenerator = new PostPolicyGenerator(
+				config.getCdnConfiguration().getRegion(), config.getCdnConfiguration().getBucket(),
+				config.getCdnConfiguration().getAccessKey());
+		PolicySigner profileCdnPolicySigner = new PolicySigner(config.getCdnConfiguration().getAccessSecret(),
+				config.getCdnConfiguration().getRegion());
 
-    apnSender.setApnFallbackManager(apnFallbackManager);
-    environment.lifecycle().manage(apnFallbackManager);
-    environment.lifecycle().manage(pubSubManager);
-    environment.lifecycle().manage(pushSender);
-    environment.lifecycle().manage(messagesCache);
-    environment.lifecycle().manage(accountDatabaseCrawler);
-    environment.lifecycle().manage(remoteConfigsManager);
+		ServerSecretParams zkSecretParams = new ServerSecretParams(config.getZkConfig().getServerSecret());
+		ServerZkProfileOperations zkProfileOperations = new ServerZkProfileOperations(zkSecretParams);
+		ServerZkAuthOperations zkAuthOperations = new ServerZkAuthOperations(zkSecretParams);
+		boolean isZkEnabled = config.getZkConfig().isEnabled();
 
-    AWSCredentials         credentials               = new BasicAWSCredentials(config.getCdnConfiguration().getAccessKey(), config.getCdnConfiguration().getAccessSecret());
-    AWSCredentialsProvider credentialsProvider       = new AWSStaticCredentialsProvider(credentials);
-    AmazonS3               cdnS3Client               = AmazonS3Client.builder().withCredentials(credentialsProvider).withRegion(config.getCdnConfiguration().getRegion()).build();
-    PostPolicyGenerator    profileCdnPolicyGenerator = new PostPolicyGenerator(config.getCdnConfiguration().getRegion(), config.getCdnConfiguration().getBucket(), config.getCdnConfiguration().getAccessKey());
-    PolicySigner           profileCdnPolicySigner    = new PolicySigner(config.getCdnConfiguration().getAccessSecret(), config.getCdnConfiguration().getRegion());
+		AttachmentControllerV1 attachmentControllerV1 = new AttachmentControllerV1(rateLimiters,
+				config.getAwsAttachmentsConfiguration().getAccessKey(),
+				config.getAwsAttachmentsConfiguration().getAccessSecret(),
+				config.getAwsAttachmentsConfiguration().getBucket());
+		AttachmentControllerV2 attachmentControllerV2 = new AttachmentControllerV2(rateLimiters,
+				config.getAwsAttachmentsConfiguration().getAccessKey(),
+				config.getAwsAttachmentsConfiguration().getAccessSecret(),
+				config.getAwsAttachmentsConfiguration().getRegion(),
+				config.getAwsAttachmentsConfiguration().getBucket());
+		AttachmentControllerV3 attachmentControllerV3 = new AttachmentControllerV3(rateLimiters,
+				config.getGcpAttachmentsConfiguration().getDomain(), config.getGcpAttachmentsConfiguration().getEmail(),
+				config.getGcpAttachmentsConfiguration().getMaxSizeInBytes(),
+				config.getGcpAttachmentsConfiguration().getPathPrefix(),
+				config.getGcpAttachmentsConfiguration().getRsaSigningKey());
+		KeysController keysController = new KeysController(rateLimiters, keys, accountsManager, directoryQueue);
+		MessageController messageController = new MessageController(rateLimiters, pushSender, receiptSender,
+				accountsManager, messagesManager, apnFallbackManager);
+		ProfileController profileController = new ProfileController(rateLimiters, accountsManager, profilesManager,
+				usernamesManager, cdnS3Client, profileCdnPolicyGenerator, profileCdnPolicySigner,
+				config.getCdnConfiguration().getBucket(), zkProfileOperations, isZkEnabled);
+		StickerController stickerController = new StickerController(rateLimiters,
+				config.getCdnConfiguration().getAccessKey(), config.getCdnConfiguration().getAccessSecret(),
+				config.getCdnConfiguration().getRegion(), config.getCdnConfiguration().getBucket());
+		RemoteConfigController remoteConfigController = new RemoteConfigController(remoteConfigsManager,
+				config.getRemoteConfigConfiguration().getAuthorizedTokens());
 
-    ServerSecretParams        zkSecretParams         = new ServerSecretParams(config.getZkConfig().getServerSecret());
-    ServerZkProfileOperations zkProfileOperations    = new ServerZkProfileOperations(zkSecretParams);
-    ServerZkAuthOperations    zkAuthOperations       = new ServerZkAuthOperations(zkSecretParams);
-    boolean                   isZkEnabled            = config.getZkConfig().isEnabled();
+		AuthFilter<BasicCredentials, Account> accountAuthFilter = new BasicCredentialAuthFilter.Builder<Account>()
+				.setAuthenticator(accountAuthenticator).buildAuthFilter();
+		AuthFilter<BasicCredentials, DisabledPermittedAccount> disabledPermittedAccountAuthFilter = new BasicCredentialAuthFilter.Builder<DisabledPermittedAccount>()
+				.setAuthenticator(disabledPermittedAccountAuthenticator).buildAuthFilter();
 
-    AttachmentControllerV1 attachmentControllerV1    = new AttachmentControllerV1(rateLimiters, config.getAwsAttachmentsConfiguration().getAccessKey(), config.getAwsAttachmentsConfiguration().getAccessSecret(), config.getAwsAttachmentsConfiguration().getBucket());
-    AttachmentControllerV2 attachmentControllerV2    = new AttachmentControllerV2(rateLimiters, config.getAwsAttachmentsConfiguration().getAccessKey(), config.getAwsAttachmentsConfiguration().getAccessSecret(), config.getAwsAttachmentsConfiguration().getRegion(), config.getAwsAttachmentsConfiguration().getBucket());
-    AttachmentControllerV3 attachmentControllerV3    = new AttachmentControllerV3(rateLimiters, config.getGcpAttachmentsConfiguration().getDomain(), config.getGcpAttachmentsConfiguration().getEmail(), config.getGcpAttachmentsConfiguration().getMaxSizeInBytes(), config.getGcpAttachmentsConfiguration().getPathPrefix(), config.getGcpAttachmentsConfiguration().getRsaSigningKey());
-    KeysController         keysController            = new KeysController(rateLimiters, keys, accountsManager, directoryQueue);
-    MessageController      messageController         = new MessageController(rateLimiters, pushSender, receiptSender, accountsManager, messagesManager, apnFallbackManager);
-    ProfileController      profileController         = new ProfileController(rateLimiters, accountsManager, profilesManager, usernamesManager, cdnS3Client, profileCdnPolicyGenerator, profileCdnPolicySigner, config.getCdnConfiguration().getBucket(), zkProfileOperations, isZkEnabled);
-    StickerController      stickerController         = new StickerController(rateLimiters, config.getCdnConfiguration().getAccessKey(), config.getCdnConfiguration().getAccessSecret(), config.getCdnConfiguration().getRegion(), config.getCdnConfiguration().getBucket());
-    RemoteConfigController remoteConfigController    = new RemoteConfigController(remoteConfigsManager, config.getRemoteConfigConfiguration().getAuthorizedTokens());
+		environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(Account.class,
+				accountAuthFilter, DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter)));
+		environment.jersey().register(new PolymorphicAuthValueFactoryProvider.Binder<>(
+				ImmutableSet.of(Account.class, DisabledPermittedAccount.class)));
 
-    AuthFilter<BasicCredentials, Account>                  accountAuthFilter                  = new BasicCredentialAuthFilter.Builder<Account>().setAuthenticator(accountAuthenticator).buildAuthFilter                                  ();
-    AuthFilter<BasicCredentials, DisabledPermittedAccount> disabledPermittedAccountAuthFilter = new BasicCredentialAuthFilter.Builder<DisabledPermittedAccount>().setAuthenticator(disabledPermittedAccountAuthenticator).buildAuthFilter();
+		environment.jersey()
+				.register(new AccountController(pendingAccountsManager, accountsManager, usernamesManager,
+						abusiveHostRules, rateLimiters, smsSender, directoryQueue, messagesManager, turnTokenGenerator,
+						config.getTestDevices(), recaptchaClient, gcmSender, apnSender, backupCredentialsGenerator));
+		environment.jersey().register(new DeviceController(pendingDevicesManager, accountsManager, messagesManager,
+				directoryQueue, rateLimiters, config.getMaxDevices()));
+		environment.jersey().register(new DirectoryController(rateLimiters, directory, directoryCredentialsGenerator));
+		environment.jersey().register(new ProvisioningController(rateLimiters, pushSender));
+		environment.jersey().register(new CertificateController(new CertificateGenerator(
+				config.getDeliveryCertificate().getCertificate(), config.getDeliveryCertificate().getPrivateKey(),
+				config.getDeliveryCertificate().getExpiresDays()), zkAuthOperations, isZkEnabled));
+		environment.jersey()
+				.register(new VoiceVerificationController(config.getVoiceVerificationConfiguration().getUrl(),
+						config.getVoiceVerificationConfiguration().getLocales()));
+		environment.jersey().register(new SecureStorageController(storageCredentialsGenerator));
+		environment.jersey().register(new SecureBackupController(backupCredentialsGenerator));
+		environment.jersey().register(attachmentControllerV1);
+		environment.jersey().register(attachmentControllerV2);
+		environment.jersey().register(attachmentControllerV3);
+		environment.jersey().register(keysController);
+		environment.jersey().register(messageController);
+		environment.jersey().register(profileController);
+		environment.jersey().register(stickerController);
+		environment.jersey().register(remoteConfigController);
 
-    environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(Account.class, accountAuthFilter,
-                                                                                      DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter)));
-    environment.jersey().register(new PolymorphicAuthValueFactoryProvider.Binder<>(ImmutableSet.of(Account.class, DisabledPermittedAccount.class)));
+		///
+		WebSocketEnvironment<Account> webSocketEnvironment = new WebSocketEnvironment<>(environment,
+				config.getWebSocketConfiguration(), 90000);
+		webSocketEnvironment.setAuthenticator(new WebSocketAccountAuthenticator(accountAuthenticator));
+		webSocketEnvironment.setConnectListener(new AuthenticatedConnectListener(pushSender, receiptSender,
+				messagesManager, pubSubManager, apnFallbackManager));
+		webSocketEnvironment.jersey().register(new KeepAliveController(pubSubManager));
+		webSocketEnvironment.jersey().register(messageController);
+		webSocketEnvironment.jersey().register(profileController);
+		webSocketEnvironment.jersey().register(attachmentControllerV1);
+		webSocketEnvironment.jersey().register(attachmentControllerV2);
+		webSocketEnvironment.jersey().register(attachmentControllerV3);
+		webSocketEnvironment.jersey().register(remoteConfigController);
 
-    environment.jersey().register(new AccountController(pendingAccountsManager, accountsManager, usernamesManager, abusiveHostRules, rateLimiters, smsSender, directoryQueue, messagesManager, turnTokenGenerator, config.getTestDevices(), recaptchaClient, gcmSender, apnSender, backupCredentialsGenerator));
-    environment.jersey().register(new DeviceController(pendingDevicesManager, accountsManager, messagesManager, directoryQueue, rateLimiters, config.getMaxDevices()));
-    environment.jersey().register(new DirectoryController(rateLimiters, directory, directoryCredentialsGenerator));
-    environment.jersey().register(new ProvisioningController(rateLimiters, pushSender));
-    environment.jersey().register(new CertificateController(new CertificateGenerator(config.getDeliveryCertificate().getCertificate(), config.getDeliveryCertificate().getPrivateKey(), config.getDeliveryCertificate().getExpiresDays()), zkAuthOperations, isZkEnabled));
-    environment.jersey().register(new VoiceVerificationController(config.getVoiceVerificationConfiguration().getUrl(), config.getVoiceVerificationConfiguration().getLocales()));
-    environment.jersey().register(new SecureStorageController(storageCredentialsGenerator));
-    environment.jersey().register(new SecureBackupController(backupCredentialsGenerator));
-    environment.jersey().register(attachmentControllerV1);
-    environment.jersey().register(attachmentControllerV2);
-    environment.jersey().register(attachmentControllerV3);
-    environment.jersey().register(keysController);
-    environment.jersey().register(messageController);
-    environment.jersey().register(profileController);
-    environment.jersey().register(stickerController);
-    environment.jersey().register(remoteConfigController);
+		WebSocketEnvironment<Account> provisioningEnvironment = new WebSocketEnvironment<>(environment,
+				webSocketEnvironment.getRequestLog(), 60000);
+		provisioningEnvironment.setConnectListener(new ProvisioningConnectListener(pubSubManager));
+		provisioningEnvironment.jersey().register(new KeepAliveController(pubSubManager));
 
-    ///
-    WebSocketEnvironment<Account> webSocketEnvironment = new WebSocketEnvironment<>(environment, config.getWebSocketConfiguration(), 90000);
-    webSocketEnvironment.setAuthenticator(new WebSocketAccountAuthenticator(accountAuthenticator));
-    webSocketEnvironment.setConnectListener(new AuthenticatedConnectListener(pushSender, receiptSender, messagesManager, pubSubManager, apnFallbackManager));
-    webSocketEnvironment.jersey().register(new KeepAliveController(pubSubManager));
-    webSocketEnvironment.jersey().register(messageController);
-    webSocketEnvironment.jersey().register(profileController);
-    webSocketEnvironment.jersey().register(attachmentControllerV1);
-    webSocketEnvironment.jersey().register(attachmentControllerV2);
-    webSocketEnvironment.jersey().register(attachmentControllerV3);
-    webSocketEnvironment.jersey().register(remoteConfigController);
+		registerCorsFilter(environment);
+		registerExceptionMappers(environment, webSocketEnvironment, provisioningEnvironment);
 
-    WebSocketEnvironment<Account> provisioningEnvironment = new WebSocketEnvironment<>(environment, webSocketEnvironment.getRequestLog(), 60000);
-    provisioningEnvironment.setConnectListener(new ProvisioningConnectListener(pubSubManager));
-    provisioningEnvironment.jersey().register(new KeepAliveController(pubSubManager));
+		WebSocketResourceProviderFactory<Account> webSocketServlet = new WebSocketResourceProviderFactory<>(
+				webSocketEnvironment, Account.class);
+		WebSocketResourceProviderFactory<Account> provisioningServlet = new WebSocketResourceProviderFactory<>(
+				provisioningEnvironment, Account.class);
 
-    registerCorsFilter(environment);
-    registerExceptionMappers(environment, webSocketEnvironment, provisioningEnvironment);
+		ServletRegistration.Dynamic websocket = environment.servlets().addServlet("WebSocket", webSocketServlet);
+		ServletRegistration.Dynamic provisioning = environment.servlets().addServlet("Provisioning",
+				provisioningServlet);
 
-    WebSocketResourceProviderFactory<Account> webSocketServlet    = new WebSocketResourceProviderFactory<>(webSocketEnvironment, Account.class);
-    WebSocketResourceProviderFactory<Account> provisioningServlet = new WebSocketResourceProviderFactory<>(provisioningEnvironment, Account.class);
+		websocket.addMapping("/v1/websocket/");
+		websocket.setAsyncSupported(true);
 
-    ServletRegistration.Dynamic websocket    = environment.servlets().addServlet("WebSocket", webSocketServlet      );
-    ServletRegistration.Dynamic provisioning = environment.servlets().addServlet("Provisioning", provisioningServlet);
-
-    websocket.addMapping("/v1/websocket/");
-    websocket.setAsyncSupported(true);
-
-    provisioning.addMapping("/v1/websocket/provisioning/");
-    provisioning.setAsyncSupported(true);
+		provisioning.addMapping("/v1/websocket/provisioning/");
+		provisioning.setAsyncSupported(true);
 
 ///
 
-    environment.healthChecks().register("directory", new RedisHealthCheck(directoryClient));
-    environment.healthChecks().register("cache", new RedisHealthCheck(cacheClient));
+		environment.healthChecks().register("directory", new RedisHealthCheck(directoryClient));
+		environment.healthChecks().register("cache", new RedisHealthCheck(cacheClient));
 
-    environment.metrics().register(name(CpuUsageGauge.class, "cpu"), new CpuUsageGauge());
-    environment.metrics().register(name(FreeMemoryGauge.class, "free_memory"), new FreeMemoryGauge());
-    environment.metrics().register(name(NetworkSentGauge.class, "bytes_sent"), new NetworkSentGauge());
-    environment.metrics().register(name(NetworkReceivedGauge.class, "bytes_received"), new NetworkReceivedGauge());
-    environment.metrics().register(name(FileDescriptorGauge.class, "fd_count"), new FileDescriptorGauge());
-  }
+		environment.metrics().register(name(CpuUsageGauge.class, "cpu"), new CpuUsageGauge());
+		environment.metrics().register(name(FreeMemoryGauge.class, "free_memory"), new FreeMemoryGauge());
+		environment.metrics().register(name(NetworkSentGauge.class, "bytes_sent"), new NetworkSentGauge());
+		environment.metrics().register(name(NetworkReceivedGauge.class, "bytes_received"), new NetworkReceivedGauge());
+		environment.metrics().register(name(FileDescriptorGauge.class, "fd_count"), new FileDescriptorGauge());
+	}
 
-  private void registerExceptionMappers(Environment environment, WebSocketEnvironment<Account> webSocketEnvironment, WebSocketEnvironment<Account> provisioningEnvironment) {
-    environment.jersey().register(new IOExceptionMapper());
-    environment.jersey().register(new RateLimitExceededExceptionMapper());
-    environment.jersey().register(new InvalidWebsocketAddressExceptionMapper());
-    environment.jersey().register(new DeviceLimitExceededExceptionMapper());
+	private void registerExceptionMappers(Environment environment, WebSocketEnvironment<Account> webSocketEnvironment,
+			WebSocketEnvironment<Account> provisioningEnvironment) {
+		environment.jersey().register(new IOExceptionMapper());
+		environment.jersey().register(new RateLimitExceededExceptionMapper());
+		environment.jersey().register(new InvalidWebsocketAddressExceptionMapper());
+		environment.jersey().register(new DeviceLimitExceededExceptionMapper());
 
-    webSocketEnvironment.jersey().register(new IOExceptionMapper());
-    webSocketEnvironment.jersey().register(new RateLimitExceededExceptionMapper());
-    webSocketEnvironment.jersey().register(new InvalidWebsocketAddressExceptionMapper());
-    webSocketEnvironment.jersey().register(new DeviceLimitExceededExceptionMapper());
+		webSocketEnvironment.jersey().register(new IOExceptionMapper());
+		webSocketEnvironment.jersey().register(new RateLimitExceededExceptionMapper());
+		webSocketEnvironment.jersey().register(new InvalidWebsocketAddressExceptionMapper());
+		webSocketEnvironment.jersey().register(new DeviceLimitExceededExceptionMapper());
 
-    provisioningEnvironment.jersey().register(new IOExceptionMapper());
-    provisioningEnvironment.jersey().register(new RateLimitExceededExceptionMapper());
-    provisioningEnvironment.jersey().register(new InvalidWebsocketAddressExceptionMapper());
-    provisioningEnvironment.jersey().register(new DeviceLimitExceededExceptionMapper());
-  }
+		provisioningEnvironment.jersey().register(new IOExceptionMapper());
+		provisioningEnvironment.jersey().register(new RateLimitExceededExceptionMapper());
+		provisioningEnvironment.jersey().register(new InvalidWebsocketAddressExceptionMapper());
+		provisioningEnvironment.jersey().register(new DeviceLimitExceededExceptionMapper());
+	}
 
-  private void registerCorsFilter(Environment environment) {
-    FilterRegistration.Dynamic filter = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
-    filter.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
-    filter.setInitParameter("allowedOrigins", "*");
-    filter.setInitParameter("allowedHeaders", "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,X-Signal-Agent");
-    filter.setInitParameter("allowedMethods", "GET,PUT,POST,DELETE,OPTIONS");
-    filter.setInitParameter("preflightMaxAge", "5184000");
-    filter.setInitParameter("allowCredentials", "true");
-  }
+	private void registerCorsFilter(Environment environment) {
+		FilterRegistration.Dynamic filter = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
+		filter.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+		filter.setInitParameter("allowedOrigins", "*");
+		filter.setInitParameter("allowedHeaders",
+				"Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin,X-Signal-Agent");
+		filter.setInitParameter("allowedMethods", "GET,PUT,POST,DELETE,OPTIONS");
+		filter.setInitParameter("preflightMaxAge", "5184000");
+		filter.setInitParameter("allowCredentials", "true");
+	}
 
-  public static void main(String[] args) throws Exception {
-    new WhisperServerService().run(args);
-  }
+	public static void main(String[] args) throws Exception {
+		new WhisperServerService().run(args);
+	}
 }
