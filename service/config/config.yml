@@ -231,10 +231,10 @@ accountDatabaseCrawler:
     chunkIntervalMs: 80000000
 
 cdn:
-    accessKey: AKIAAAAAABBBBBCCCCCCC
-    accessSecret: QhABCCCCCCCCCCCCCDDDDDDDDDDDDDDDD
-    bucket: fake
-    region: ap-southeast-1
+    accessKey: AKIAUHWNR6PWT6ZAPWV6
+    accessSecret: LO4Yq8Mequl6TrYJlTQC4Kaz7vfz/HR0YpDoePhT
+    bucket: signallxrtalk
+    region: ap-northeast-1
 
 voiceVerification:
     url: http://127.0.0.1 #fake
