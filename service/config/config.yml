@@ -83,10 +83,10 @@ messageStore: # Postgresql database configuration for message store
   url: jdbc:postgresql://127.0.0.1:5432/messagedb
 
 awsAttachments: # AWS S3 configuration
-  accessKey: 1
-  accessSecret: 1
-  bucket: 1
-  region: 1
+    accessKey: AKIAUHWNR6PWT6ZAPWV6
+    accessSecret: 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
+    bucket: signallxrtalk
+    region: ap-northeast-1
 
 gcpAttachments: # GCP Storage configuration
   domain: 1
