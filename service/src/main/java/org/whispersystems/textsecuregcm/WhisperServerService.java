@@ -295,6 +295,8 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 		 * SGX。SGX能创建硬件隔离区域，称为enclave（中文名叫“飞地”）。
 		 * 目前云服务提供商中只有微软Azure和Intel合作提供了云上的SGX的试用环境，而且有地理区域限制。
 		 * 如果搞不到Azure的SGX环境，只能购买支持SGX的Intel机器。
+		 * 
+		 * https://github.com/lxr1907/ContactDiscoveryService
 		 */
 		// DirectoryReconciliationClient directoryReconciliationClient = new
 		// DirectoryReconciliationClient(config.getDirectoryConfiguration().getDirectoryServerConfiguration());
