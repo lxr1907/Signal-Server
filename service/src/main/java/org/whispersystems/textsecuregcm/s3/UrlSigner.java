@@ -41,7 +41,7 @@ public class UrlSigner {
 
   public URL getPreSignedUrl(long attachmentId, HttpMethod method, boolean unaccelerated) {
     AmazonS3                    client  = new AmazonS3Client(credentials);
-    client.setEndpoint("signallxrtalk.s3-accelerate.amazonaws.com");
+    client.setEndpoint("https://signallxrtalk.s3-ap-northeast-1.amazonaws.com");
     GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, String.valueOf(attachmentId), method);
     
     request.setExpiration(new Date(System.currentTimeMillis() + DURATION));
