@@ -89,7 +89,7 @@ public class AttachmentControllerTest {
               .setMapper(SystemMapper.getMapper())
               .setTestContainerFactory(new GrizzlyWebTestContainerFactory())
               .addResource(new AttachmentControllerV1(rateLimiters, "accessKey", "accessSecret", "attachment-bucket"))
-              .addResource(new AttachmentControllerV2(rateLimiters, "accessKey", "accessSecret", "us-east-1", "attachmentv2-bucket"))
+              .addResource(new AttachmentControllerV2(rateLimiters, "accessKey", "accessSecret", "ap-northeast-1", "attachmentv2-bucket"))
               .addResource(new AttachmentControllerV3(rateLimiters, "some-cdn.signal.org", "signal@example.com", 1000, "/attach-here", RSA_PRIVATE_KEY_PEM))
               .build();
       Security.removeProvider(BouncyCastleProvider.PROVIDER_NAME);
@@ -192,7 +192,7 @@ public class AttachmentControllerTest {
     String[] credentialParts = descriptor.getCredential().split("/");
 
     assertThat(credentialParts[0]).isEqualTo("accessKey");
-    assertThat(credentialParts[2]).isEqualTo("us-east-1");
+    assertThat(credentialParts[2]).isEqualTo("ap-northeast-1");
     assertThat(credentialParts[3]).isEqualTo("s3");
     assertThat(credentialParts[4]).isEqualTo("aws4_request");
 

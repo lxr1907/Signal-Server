@@ -35,7 +35,7 @@ public class StickerControllerTest {
                                                                    .addProvider(new PolymorphicAuthValueFactoryProvider.Binder<>(ImmutableSet.of(Account.class, DisabledPermittedAccount.class)))
                                                                    .setMapper(SystemMapper.getMapper())
                                                                    .setTestContainerFactory(new GrizzlyWebTestContainerFactory())
-                                                                   .addResource(new StickerController(rateLimiters, "foo", "bar", "us-east-1", "mybucket"))
+                                                                   .addResource(new StickerController(rateLimiters, "foo", "bar", "ap-northeast-1", "mybucket"))
                                                                    .build();
 
   @Before

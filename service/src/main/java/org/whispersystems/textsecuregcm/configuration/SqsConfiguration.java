@@ -34,7 +34,7 @@ public class SqsConfiguration {
 
   @NotEmpty
   @JsonProperty
-  private String region = "us-east-1";
+  private String region = "ap-northeast-1";
 
   public String getAccessKey() {
     return accessKey;
