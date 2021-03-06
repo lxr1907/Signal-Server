@@ -19,6 +19,7 @@ package org.whispersystems.textsecuregcm.s3;
 import com.amazonaws.HttpMethod;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.RegionUtils;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
@@ -41,7 +42,7 @@ public class UrlSigner {
 
   public URL getPreSignedUrl(long attachmentId, HttpMethod method, boolean unaccelerated) {
     AmazonS3                    client  = new AmazonS3Client(credentials);
-    client.setEndpoint("https://signallxrtalk.s3-ap-northeast-1.amazonaws.com");
+    client.setRegion(RegionUtils.getRegion("ap-northeast-1"));
     GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, String.valueOf(attachmentId), method);
     
     request.setExpiration(new Date(System.currentTimeMillis() + DURATION));
