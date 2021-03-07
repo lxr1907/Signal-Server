@@ -114,6 +114,7 @@ public class UrlSigner {
 			System.out.println("Generating pre-signed URL.");
 			GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName,
 					objectKey).withMethod(HttpMethod.GET).withExpiration(expiration);
+			generatePresignedUrlRequest.setContentType("application/octet-stream");
 			URL url = s3Client.generatePresignedUrl(generatePresignedUrlRequest);
 
 			System.out.println("" + url.toString());
