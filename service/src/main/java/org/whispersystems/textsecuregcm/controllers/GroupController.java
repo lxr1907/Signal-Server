@@ -17,10 +17,13 @@
 package org.whispersystems.textsecuregcm.controllers;
 
 import com.codahale.metrics.annotation.Timed;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.auth.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.auth.AmbiguousIdentifier;
+import org.whispersystems.textsecuregcm.proto.Group;
 import org.whispersystems.textsecuregcm.storage.Account;
 
 import javax.ws.rs.*;
@@ -38,26 +41,32 @@ public class GroupController {
 
   @Timed
   @PUT
-  public String saveGroup(@Auth Optional<Account> source, String body
-  ) {
+  public Group saveGroup(@Auth Optional<Account> source, Group body
+  ) throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
+    String string = mapper.writeValueAsString(body);
     System.out.println(body);
-    logger.warn(body);
+    logger.warn(string);
     return body;
   }
 
   @Timed
   @GET
-  public String getGroup(@Auth Account account, String body) {
+  public Group getGroup(@Auth Account account, Group body) throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
+    String string = mapper.writeValueAsString(body);
     System.out.println(body);
-    logger.warn(body);
+    logger.warn(string);
     return body;
   }
 
   @Timed
   @PATCH
-  public String patchGroup(@Auth Account account, String body) {
+  public Group patchGroup(@Auth Account account, Group body) throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
+    String string = mapper.writeValueAsString(body);
     System.out.println(body);
-    logger.warn(body);
+    logger.warn(string);
     return body;
   }
 
