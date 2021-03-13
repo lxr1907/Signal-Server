@@ -42,9 +42,8 @@ public class GroupController {
   @Timed
   @PUT
   @Consumes("application/x-protobuf")
-  public String saveGroup(@Auth Optional<Account> source, Group body
-  ) throws JsonProcessingException
-  {
+  public String saveGroup(Group body
+  ) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
     String string = mapper.writeValueAsString(body);
     System.out.println(string);
@@ -55,7 +54,7 @@ public class GroupController {
   @Timed
   @GET
   @Produces("application/x-protobuf")
-  public Group getGroup(@Auth Account account, Group body) throws JsonProcessingException {
+  public Group getGroup(Group body) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
     String string = mapper.writeValueAsString(body);
     System.out.println(body);
