@@ -26,6 +26,7 @@ import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 
 import javax.ws.rs.*;
+import java.util.Set;
 
 
 @Path("/v1/groups")
@@ -39,40 +40,47 @@ public class GroupController {
   }
 
   public static final String GROUP_REDIS_KEY = "group_";
+  public static final String GROUP_ADMIN_REDIS_KEY = "group_admin_";
+  public static final String GROUP_MEMBER_REDIS_KEY = "group_member_";
 
   @Timed
   @PUT
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group saveGroup(@Auth Account account, Group body
+  public Group saveGroup(@Auth Account account, Group group
   ) {
-    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), body.getTitle().toByteArray(), body.toByteArray());
-    return body;
+    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), group.getTitle().toByteArray(), group.toByteArray());
+    cacheClient.getWriteResource().sadd((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes(),
+        group.getTitle().toByteArray());
+    return group;
   }
 
   @Timed
   @GET
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group getGroup(@Auth Account account, Group body) {
-    Group bodyRet = null;
-    byte[] byteGroup = cacheClient.getWriteResource().hget(GROUP_REDIS_KEY.getBytes(), body.getTitle().toByteArray());
-    try {
-      bodyRet = Group.parseFrom(byteGroup);
-    } catch (InvalidProtocolBufferException e) {
-      e.printStackTrace();
+  public Set<Group> getGroup(@Auth Account account) {
+    Set<Group> groupSet = null;
+    Set<byte[]> groups = cacheClient.getWriteResource().smembers((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes());
+    for (byte[] groupTitleByte : groups) {
+      try {
+        byte[] groupByte = cacheClient.getWriteResource().hget(GROUP_REDIS_KEY.getBytes(), groupTitleByte);
+        Group group = Group.parseFrom(groupByte);
+        groupSet.add(group);
+      } catch (InvalidProtocolBufferException e) {
+        e.printStackTrace();
+      }
     }
-
-    return bodyRet;
+    return groupSet;
   }
 
   @Timed
   @PATCH
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group patchGroup(@Auth Account account, Group body) {
-    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), body.getTitle().toByteArray(), body.toByteArray());
-    return body;
+  public Group patchGroup(@Auth Account account, Group group) {
+    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), group.getTitle().toByteArray(), group.toByteArray());
+    return group;
   }
 
 }
