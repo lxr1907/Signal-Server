@@ -29,4 +29,12 @@ public class ZkParamsCommand extends Command {
     System.out.println("Private: " + Base64.encodeBytesWithoutPadding(serverSecretParams.serialize()));
   }
 
+  public static void main(String[] args) {
+
+    ServerSecretParams serverSecretParams = ServerSecretParams.generate();
+    ServerPublicParams serverPublicParams = serverSecretParams.getPublicParams();
+
+    System.out.println("Public: " + Base64.encodeBytesWithoutPadding(serverPublicParams.serialize()));
+    System.out.println("Private: " + Base64.encodeBytesWithoutPadding(serverSecretParams.serialize()));
+  }
 }
