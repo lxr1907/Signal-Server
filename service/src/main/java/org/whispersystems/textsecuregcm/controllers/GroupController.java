@@ -38,8 +38,6 @@ public class GroupController {
 
   @Timed
   @PUT
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
   public String saveGroup(@Auth Optional<Account> source, String body
   ) {
     System.out.println(body);
@@ -49,7 +47,6 @@ public class GroupController {
 
   @Timed
   @GET
-  @Produces(MediaType.APPLICATION_JSON)
   public String getGroup(@Auth Account account, String body) {
     System.out.println(body);
     logger.warn(body);
