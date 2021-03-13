@@ -17,12 +17,12 @@
 package org.whispersystems.textsecuregcm.controllers;
 
 import com.codahale.metrics.annotation.Timed;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.dropwizard.auth.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.proto.Group;
+import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 
 import javax.ws.rs.*;
@@ -32,38 +32,46 @@ import javax.ws.rs.*;
 public class GroupController {
 
   private final Logger logger = LoggerFactory.getLogger(GroupController.class);
+  protected final ReplicatedJedisPool cacheClient;
 
-  public GroupController() {
+  public GroupController(ReplicatedJedisPool cacheClient) {
+    this.cacheClient = cacheClient;
   }
+
+  public static final String GROUP_REDIS_KEY = "group_";
 
   @Timed
   @PUT
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group saveGroup(Group body
-  ) throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
-    String string = mapper.writeValueAsString(body);
-    System.out.println(string);
-    logger.warn(string);
+  public Group saveGroup(@Auth Account account, Group body
+  ) {
+    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), body.getTitle().toByteArray(), body.toByteArray());
     return body;
   }
 
   @Timed
   @GET
+  @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group getGroup() {
-    return Group.newBuilder().setAvatar("123456").setRevision(1).build();
+  public Group getGroup(@Auth Account account, Group body) {
+    Group bodyRet = null;
+    byte[] byteGroup = cacheClient.getWriteResource().hget(GROUP_REDIS_KEY.getBytes(), body.getTitle().toByteArray());
+    try {
+      bodyRet = Group.parseFrom(byteGroup);
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
+    }
+
+    return bodyRet;
   }
 
   @Timed
   @PATCH
-//  @Consumes("application/x-protobuf")
-  public Group patchGroup(@Auth Account account, Group body) throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
-    String string = mapper.writeValueAsString(body);
-    System.out.println(body);
-    logger.warn(string);
+  @Consumes("application/x-protobuf")
+  @Produces("application/x-protobuf")
+  public Group patchGroup(@Auth Account account, Group body) {
+    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), body.getTitle().toByteArray(), body.toByteArray());
     return body;
   }
 
