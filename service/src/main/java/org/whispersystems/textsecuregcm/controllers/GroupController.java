@@ -38,14 +38,12 @@ public class GroupController {
 
   @Timed
   @PUT
-  @Path("/{group}")
+  @Path("/")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public String saveGroup(@Auth Optional<Account> source, String body,
-                          @PathParam("group") String group
+  public String saveGroup(@Auth Optional<Account> source, String body
   ) {
     logger.warn(body);
-    logger.warn(group);
     return body;
   }
 

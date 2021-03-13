@@ -53,23 +53,7 @@ import org.whispersystems.textsecuregcm.auth.DisabledPermittedAccount;
 import org.whispersystems.textsecuregcm.auth.DisabledPermittedAccountAuthenticator;
 import org.whispersystems.textsecuregcm.auth.ExternalServiceCredentialGenerator;
 import org.whispersystems.textsecuregcm.auth.TurnTokenGenerator;
-import org.whispersystems.textsecuregcm.controllers.AccountController;
-import org.whispersystems.textsecuregcm.controllers.AttachmentControllerV1;
-import org.whispersystems.textsecuregcm.controllers.AttachmentControllerV2;
-import org.whispersystems.textsecuregcm.controllers.AttachmentControllerV3;
-import org.whispersystems.textsecuregcm.controllers.CertificateController;
-import org.whispersystems.textsecuregcm.controllers.DeviceController;
-import org.whispersystems.textsecuregcm.controllers.DirectoryController;
-import org.whispersystems.textsecuregcm.controllers.KeepAliveController;
-import org.whispersystems.textsecuregcm.controllers.KeysController;
-import org.whispersystems.textsecuregcm.controllers.MessageController;
-import org.whispersystems.textsecuregcm.controllers.ProfileController;
-import org.whispersystems.textsecuregcm.controllers.ProvisioningController;
-import org.whispersystems.textsecuregcm.controllers.RemoteConfigController;
-import org.whispersystems.textsecuregcm.controllers.SecureBackupController;
-import org.whispersystems.textsecuregcm.controllers.SecureStorageController;
-import org.whispersystems.textsecuregcm.controllers.StickerController;
-import org.whispersystems.textsecuregcm.controllers.VoiceVerificationController;
+import org.whispersystems.textsecuregcm.controllers.*;
 import org.whispersystems.textsecuregcm.limits.RateLimiters;
 import org.whispersystems.textsecuregcm.liquibase.NameableMigrationsBundle;
 import org.whispersystems.textsecuregcm.mappers.DeviceLimitExceededExceptionMapper;
@@ -395,6 +379,8 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 		environment.jersey()
 				.register(new VoiceVerificationController(config.getVoiceVerificationConfiguration().getUrl(),
 						config.getVoiceVerificationConfiguration().getLocales()));
+		//增加群组功能
+		GroupController group=new GroupController();
 		environment.jersey().register(new SecureStorageController(storageCredentialsGenerator));
 		environment.jersey().register(new SecureBackupController(backupCredentialsGenerator));
 		environment.jersey().register(attachmentControllerV1);
@@ -402,6 +388,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 		environment.jersey().register(attachmentControllerV3);
 		environment.jersey().register(keysController);
 		environment.jersey().register(messageController);
+		environment.jersey().register(group);
 		environment.jersey().register(profileController);
 		environment.jersey().register(stickerController);
 		environment.jersey().register(remoteConfigController);
