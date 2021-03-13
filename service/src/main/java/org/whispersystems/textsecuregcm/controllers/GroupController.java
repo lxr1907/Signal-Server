@@ -41,7 +41,7 @@ public class GroupController {
 
   @Timed
   @PUT
-//  @Consumes("application/x-protobuf")
+  @Consumes("application/x-protobuf")
   public String saveGroup(Group body
   ) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
