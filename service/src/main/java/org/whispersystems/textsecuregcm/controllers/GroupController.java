@@ -20,6 +20,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.auth.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.whispersystems.textsecuregcm.auth.AmbiguousIdentifier;
 import org.whispersystems.textsecuregcm.storage.Account;
 
 import javax.ws.rs.*;
@@ -37,10 +38,14 @@ public class GroupController {
 
   @Timed
   @PUT
+  @Path("/{group}")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public String saveGroup(@Auth Optional<Account> source, String body) {
+  public String saveGroup(@Auth Optional<Account> source, String body,
+                          @PathParam("group") String group
+  ) {
     logger.warn(body);
+    logger.warn(group);
     return body;
   }
 
@@ -54,8 +59,7 @@ public class GroupController {
 
   @Timed
   @PATCH
-  public String patchGroup(@Auth Account account,
-                           String body) {
+  public String patchGroup(@Auth Account account, String body) {
     logger.warn(body);
     return body;
   }
