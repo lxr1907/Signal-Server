@@ -38,10 +38,13 @@ import io.dropwizard.auth.basic.BasicCredentials;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.jdbi3.JdbiFactory;
+import io.dropwizard.jersey.protobuf.ProtobufBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import liquibase.pro.packaged.T;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.glassfish.jersey.server.ResourceConfig;
 import org.jdbi.v3.core.Jdbi;
 import org.signal.zkgroup.ServerSecretParams;
 import org.signal.zkgroup.auth.ServerZkAuthOperations;
@@ -125,10 +128,13 @@ import org.whispersystems.websocket.setup.WebSocketEnvironment;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletRegistration;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 import java.security.Security;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
@@ -140,6 +146,8 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 
 	@Override
 	public void initialize(Bootstrap<WhisperServerConfiguration> bootstrap) {
+		//protobuf支持
+		bootstrap.addBundle(new ProtobufBundle());
 		bootstrap.addCommand(new VacuumCommand());
 		bootstrap.addCommand(new DeleteUserCommand());
 		bootstrap.addCommand(new CertificateCommand());
@@ -406,7 +414,12 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 		webSocketEnvironment.jersey().register(attachmentControllerV2);
 		webSocketEnvironment.jersey().register(attachmentControllerV3);
 		webSocketEnvironment.jersey().register(remoteConfigController);
+
+		//protobuf支持
 		webSocketEnvironment.jersey().register(new ProtoMessageBodyWriter());
+//		webSocketEnvironment.jersey().getApplication
+		Validator validator = environment.getValidator();
+	//	Set<ConstraintViolation<T>> violations = validator.validate(object, validationGroups);
 
 		WebSocketEnvironment<Account> provisioningEnvironment = new WebSocketEnvironment<>(environment,
 				webSocketEnvironment.getRequestLog(), 60000);
@@ -475,4 +488,5 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 	public static void main(String[] args) throws Exception {
 		new WhisperServerService().run(args);
 	}
+
 }

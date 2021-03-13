@@ -22,13 +22,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.auth.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.whispersystems.textsecuregcm.auth.AmbiguousIdentifier;
 import org.whispersystems.textsecuregcm.proto.Group;
 import org.whispersystems.textsecuregcm.storage.Account;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.*;
 
 
 @Path("/v1/groups")
@@ -42,24 +39,21 @@ public class GroupController {
   @Timed
   @PUT
   @Consumes("application/x-protobuf")
-  public String saveGroup(Group body
+  @Produces("application/x-protobuf")
+  public Group saveGroup(Group body
   ) throws JsonProcessingException {
     ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
     String string = mapper.writeValueAsString(body);
     System.out.println(string);
     logger.warn(string);
-    return string;
+    return body;
   }
 
   @Timed
   @GET
-//  @Produces("application/x-protobuf")
-  public Group getGroup(Group body) throws JsonProcessingException {
-    ObjectMapper mapper = new ObjectMapper();//先创建objmapper的对象
-    String string = mapper.writeValueAsString(body);
-    System.out.println(body);
-    logger.warn(string);
-    return body;
+  @Produces("application/x-protobuf")
+  public Group getGroup() {
+    return Group.newBuilder().setAvatar("123456").setRevision(1).build();
   }
 
   @Timed
