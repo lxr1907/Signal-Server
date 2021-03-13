@@ -38,11 +38,11 @@ public class GroupController {
 
   @Timed
   @PUT
-  @Path("/")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public String saveGroup(@Auth Optional<Account> source, String body
   ) {
+    System.out.println(body);
     logger.warn(body);
     return body;
   }
@@ -51,6 +51,7 @@ public class GroupController {
   @GET
   @Produces(MediaType.APPLICATION_JSON)
   public String getGroup(@Auth Account account, String body) {
+    System.out.println(body);
     logger.warn(body);
     return body;
   }
@@ -58,6 +59,7 @@ public class GroupController {
   @Timed
   @PATCH
   public String patchGroup(@Auth Account account, String body) {
+    System.out.println(body);
     logger.warn(body);
     return body;
   }
