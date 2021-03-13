@@ -406,6 +406,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 		webSocketEnvironment.jersey().register(attachmentControllerV2);
 		webSocketEnvironment.jersey().register(attachmentControllerV3);
 		webSocketEnvironment.jersey().register(remoteConfigController);
+		webSocketEnvironment.jersey().register(new ProtoMessageBodyWriter());
 
 		WebSocketEnvironment<Account> provisioningEnvironment = new WebSocketEnvironment<>(environment,
 				webSocketEnvironment.getRequestLog(), 60000);
