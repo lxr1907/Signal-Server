@@ -51,7 +51,9 @@ public class AttachmentControllerV2 extends AttachmentControllerBase {
 		String objectName = String.valueOf(attachmentId);
 		Pair<String, String> policy = policyGenerator.createFor(now, String.valueOf(objectName), 100 * 1024 * 1024);
 		String signature = policySigner.getSignature(now, policy.second());
-
+//https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutObject.html
+		//Valid Values: private | public-read | public-read-write | authenticated-read
+		// | aws-exec-read | bucket-owner-read | bucket-owner-full-control
 		return new AttachmentDescriptorV2(attachmentId, objectName, policy.first(), "public-read", "AWS4-HMAC-SHA256",
 				now.format(PostPolicyGenerator.AWS_DATE_TIME), policy.second(), signature);
 	}

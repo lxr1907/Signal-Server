@@ -33,7 +33,7 @@ public class PostPolicyGenerator {
                                         "  \"conditions\": [\n" +
                                         "    {\"bucket\": \"%s\"},\n" +
                                         "    {\"key\": \"%s\"},\n" +
-                                        "    {\"acl\": \"private\"},\n" +
+                                        "    {\"acl\": \"public-read\"},\n" +
                                         "    [\"starts-with\", \"$Content-Type\", \"\"],\n" +
                                         "    [\"content-length-range\", 1, " + maxSizeInBytes + "],\n" +
                                         "\n" +
