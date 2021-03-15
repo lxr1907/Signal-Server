@@ -26,6 +26,7 @@ import org.whispersystems.textsecuregcm.proto.GroupAttributeBlob;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,11 +52,14 @@ public class GroupController {
   @PUT
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group saveGroup(@Auth Account account, Group group
+  public Group saveGroup(HttpServletRequest request, Group group
   ) {
-    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), group.getTitle().toByteArray(), group.toByteArray());
-    cacheClient.getWriteResource().sadd((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes(),
-        group.getTitle().toByteArray());
+    var groupKey=group.getPublicKey();
+    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), groupKey.toByteArray(), group.toByteArray());
+    String auth=request.getHeader("Authorization");
+    System.out.println("saveGroup auth:"+auth);
+//    cacheClient.getWriteResource().sadd((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes(),
+//            groupKey.toByteArray());
     return group;
   }
 
@@ -64,22 +68,15 @@ public class GroupController {
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
   public GroupAttributeBlob getGroup(@Auth Account account) {
-    Set<Group> groupSet = new HashSet<>();
-    Set<byte[]> groups = cacheClient.getWriteResource().smembers((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes());
-    for (byte[] groupTitleByte : groups) {
-      try {
-        byte[] groupByte = cacheClient.getWriteResource().hget(GROUP_REDIS_KEY.getBytes(), groupTitleByte);
-        Group group = Group.parseFrom(groupByte);
-        groupSet.add(group);
-      } catch (InvalidProtocolBufferException e) {
-        e.printStackTrace();
-      }
-    }
-    if (groupSet != null && groupSet.size() > 0) {
-      List<Group> list = new ArrayList(groupSet);
-      Group group = list.get(0);
+    com.google.protobuf.ByteString groupKey = null;
+    byte[] groupByte = cacheClient.getWriteResource().hget(GROUP_REDIS_KEY.getBytes(), groupKey.toByteArray());
+    Group group = null;
+    try {
+      group = Group.parseFrom(groupByte);
       return GroupAttributeBlob.newBuilder().setAvatar(group.getAvatarBytes())
-          .setTitle(group.getTitle().toString()).setDisappearingMessagesDuration(3).build();
+              .setTitle(group.getTitle().toString()).setDisappearingMessagesDuration(3).build();
+    } catch (InvalidProtocolBufferException e) {
+      e.printStackTrace();
     }
     return null;
   }
@@ -89,7 +86,7 @@ public class GroupController {
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
   public Group patchGroup(@Auth Account account, Group group) {
-    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), group.getTitle().toByteArray(), group.toByteArray());
+    cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), group.getPublicKey().toByteArray(), group.toByteArray());
     return group;
   }
 
