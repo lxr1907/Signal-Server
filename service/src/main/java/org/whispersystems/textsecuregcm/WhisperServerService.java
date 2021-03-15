@@ -38,7 +38,9 @@ import io.dropwizard.auth.basic.BasicCredentials;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.jdbi3.JdbiFactory;
+import io.dropwizard.jersey.protobuf.InvalidProtocolBufferExceptionMapper;
 import io.dropwizard.jersey.protobuf.ProtobufBundle;
+import io.dropwizard.jersey.protobuf.ProtocolBufferMessageBodyProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import liquibase.pro.packaged.T;
@@ -416,7 +418,9 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
     webSocketEnvironment.jersey().register(remoteConfigController);
 
     //protobuf支持
-    webSocketEnvironment.jersey().register(new ProtoMessageBodyWriter());
+   // webSocketEnvironment.jersey().register(new ProtoMessageBodyWriter());
+    environment.jersey().register(ProtocolBufferMessageBodyProvider.class);
+    environment.jersey().register(InvalidProtocolBufferExceptionMapper.class);
 //		webSocketEnvironment.jersey().getApplication
     Validator validator = environment.getValidator();
     //	Set<ConstraintViolation<T>> violations = validator.validate(object, validationGroups);
