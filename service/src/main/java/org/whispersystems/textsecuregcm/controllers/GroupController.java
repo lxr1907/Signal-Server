@@ -22,6 +22,7 @@ import io.dropwizard.auth.Auth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.proto.Group;
+import org.whispersystems.textsecuregcm.proto.GroupAttributeBlob;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 
@@ -62,7 +63,7 @@ public class GroupController {
   @GET
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group getGroup(@Auth Account account) {
+  public GroupAttributeBlob getGroup(@Auth Account account) {
     Set<Group> groupSet = new HashSet<>();
     Set<byte[]> groups = cacheClient.getWriteResource().smembers((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes());
     for (byte[] groupTitleByte : groups) {
@@ -76,7 +77,9 @@ public class GroupController {
     }
     if (groupSet != null && groupSet.size() > 0) {
       List<Group> list = new ArrayList(groupSet);
-      return list.get(0);
+      Group group = list.get(0);
+      return GroupAttributeBlob.newBuilder().setAvatar(group.getAvatarBytes())
+          .setTitle(group.getTitle().toString()).setDisappearingMessagesDuration(3).build();
     }
     return null;
   }
