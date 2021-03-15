@@ -52,12 +52,12 @@ public class GroupController {
   @PUT
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
-  public Group saveGroup(HttpServletRequest request, Group group
+  public Group saveGroup(@Auth Account account, Group group
   ) {
     var groupKey=group.getPublicKey();
     cacheClient.getWriteResource().hset(GROUP_REDIS_KEY.getBytes(), groupKey.toByteArray(), group.toByteArray());
-    String auth=request.getHeader("Authorization");
-    System.out.println("saveGroup auth:"+auth);
+    //String auth=request.getHeader("Authorization");
+   // System.out.println("saveGroup auth:"+auth);
 //    cacheClient.getWriteResource().sadd((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes(),
 //            groupKey.toByteArray());
     return group;
