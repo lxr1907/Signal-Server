@@ -419,8 +419,8 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 
     //protobuf支持
    // webSocketEnvironment.jersey().register(new ProtoMessageBodyWriter());
-    environment.jersey().register(ProtocolBufferMessageBodyProvider.class);
-    environment.jersey().register(InvalidProtocolBufferExceptionMapper.class);
+   // environment.jersey().register(ProtocolBufferMessageBodyProvider.class);
+    //environment.jersey().register(InvalidProtocolBufferExceptionMapper.class);
 //		webSocketEnvironment.jersey().getApplication
     Validator validator = environment.getValidator();
     //	Set<ConstraintViolation<T>> violations = validator.validate(object, validationGroups);
