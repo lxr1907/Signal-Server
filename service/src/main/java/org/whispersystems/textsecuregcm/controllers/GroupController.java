@@ -26,6 +26,7 @@ import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 
 import javax.ws.rs.*;
+import java.util.HashSet;
 import java.util.Set;
 
 
@@ -60,7 +61,7 @@ public class GroupController {
   @Consumes("application/x-protobuf")
   @Produces("application/x-protobuf")
   public Set<Group> getGroup(@Auth Account account) {
-    Set<Group> groupSet = null;
+    Set<Group> groupSet = new HashSet<>();
     Set<byte[]> groups = cacheClient.getWriteResource().smembers((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes());
     for (byte[] groupTitleByte : groups) {
       try {
