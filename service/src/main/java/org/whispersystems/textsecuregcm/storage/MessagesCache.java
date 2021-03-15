@@ -34,7 +34,6 @@ import static com.codahale.metrics.MetricRegistry.name;
 import io.dropwizard.lifecycle.Managed;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Tuple;
-import redis.clients.util.SafeEncoder;
 
 public class MessagesCache implements Managed {
 
@@ -359,7 +358,7 @@ public class MessagesCache implements Managed {
       List<Pair<byte[], Double>> items   = new LinkedList<>();
 
       while (results.hasNext()) {
-        items.add(new Pair<>(results.next(), Double.valueOf(SafeEncoder.encode(results.next()))));
+        items.add(new Pair<>(results.next(), Double.valueOf((results.next().toString()))));
       }
 
       return items;

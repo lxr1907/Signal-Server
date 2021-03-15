@@ -9,6 +9,7 @@ import org.whispersystems.textsecuregcm.util.Constants;
 
 import static com.codahale.metrics.MetricRegistry.name;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.params.SetParams;
 
 public class LockingRateLimiter extends RateLimiter {
 
@@ -48,7 +49,10 @@ public class LockingRateLimiter extends RateLimiter {
 
   private boolean acquireLock(String key) {
     try (Jedis jedis = cacheClient.getWriteResource()) {
-      return jedis.set(getLockName(key), "L", "NX", "EX", 10) != null;
+
+      SetParams setParams=new SetParams();
+      setParams.nx().ex(10);
+      return jedis.set(getLockName(key), "L", setParams) != null;
     }
   }
 

@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.params.SetParams;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class AccountDatabaseCrawlerCache {
@@ -58,7 +59,9 @@ public class AccountDatabaseCrawlerCache {
 
   public boolean claimActiveWork(String workerId, long ttlMs) {
     try (Jedis jedis = jedisPool.getWriteResource()) {
-      return "OK".equals(jedis.set(ACTIVE_WORKER_KEY, workerId, "NX", "PX", ttlMs));
+      SetParams setParams=new SetParams();
+      setParams.nx().px(ttlMs);
+      return "OK".equals(jedis.set(ACTIVE_WORKER_KEY, workerId, setParams));
     }
   }
 
