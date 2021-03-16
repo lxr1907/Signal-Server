@@ -343,11 +343,11 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 
       //群组验证
       environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(Account.class,
-              accountAuthFilter)));
+              accountAuthFilter, DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter)));
       environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(GroupEntity.class,
-              groupAuthFilter, DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter)));
+              groupAuthFilter)));
     environment.jersey().register(new PolymorphicAuthValueFactoryProvider.Binder<>(
-        ImmutableSet.of(Account.class, DisabledPermittedAccount.class)));
+        ImmutableSet.of(Account.class, GroupEntity.class,DisabledPermittedAccount.class)));
 
     environment.jersey()
         .register(new AccountController(pendingAccountsManager, accountsManager, usernamesManager,
