@@ -25,6 +25,7 @@ import org.whispersystems.textsecuregcm.proto.Group;
 import org.whispersystems.textsecuregcm.proto.GroupAttributeBlob;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
+import org.whispersystems.textsecuregcm.storage.GroupEntity;
 import redis.clients.jedis.Jedis;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,66 +36,76 @@ import java.util.List;
 import java.util.Set;
 
 
+/**
+ * lxr 20210316
+ */
 @Path("/v1/groups")
 public class GroupController {
 
-  private final Logger logger = LoggerFactory.getLogger(GroupController.class);
-  protected final ReplicatedJedisPool cacheClient;
+    private final Logger logger = LoggerFactory.getLogger(GroupController.class);
+    protected final ReplicatedJedisPool cacheClient;
 
-  public GroupController(ReplicatedJedisPool cacheClient) {
-    this.cacheClient = cacheClient;
-  }
+    public GroupController(ReplicatedJedisPool cacheClient) {
+        this.cacheClient = cacheClient;
+    }
 
-  public static final String GROUP_REDIS_KEY = "group_";
-  public static final String GROUP_ADMIN_REDIS_KEY = "group_admin_";
-  public static final String GROUP_MEMBER_REDIS_KEY = "group_member_";
+    public static final String GROUP_REDIS_KEY = "group_";
+    public static final String GROUP_ADMIN_REDIS_KEY = "group_admin_";
+    public static final String GROUP_MEMBER_REDIS_KEY = "group_member_";
 
-  @Timed
-  @PUT
-  @Consumes("application/x-protobuf")
-  @Produces("application/x-protobuf")
-  public Group saveGroup(@Auth Account account, Group group
-  ) {
-    var groupKey=group.getPublicKey();
-    Jedis jedis=cacheClient.getWriteResource();
-    jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.toByteArray(), group.toByteArray());
-    jedis.close();
-    //String auth=request.getHeader("Authorization");
-   // System.out.println("saveGroup auth:"+auth);
-//    cacheClient.getWriteResource().sadd((GROUP_ADMIN_REDIS_KEY + account.getUuid()).getBytes(),
-//            groupKey.toByteArray());
-    return group;
-  }
+    @Timed
+    @PUT
+    @Consumes("application/x-protobuf")
+    @Produces("application/x-protobuf")
+    public Group saveGroup(@Auth GroupEntity groupEntity, Group group) {
+        var groupKey = group.getPublicKey();
+        var g = group;
+        System.out.println("group.publickey:" + g.getPublicKey().toString());
+        System.out.println("group.title:" + g.getTitle());
+        System.out.println("group.avatar:" + g.getAvatar());
+        System.out.println("group.getAccessControl:" + g.getAccessControl());
+        System.out.println("group.members0.userid:" + g.getMembers(0).getUserId());
+        try (Jedis jedis = cacheClient.getWriteResource()) {
+            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.toByteArray(), group.toByteArray());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return group;
+    }
 
-  @Timed
-  @GET
-  @Consumes("application/x-protobuf")
-  @Produces("application/x-protobuf")
-  public GroupAttributeBlob getGroup(@Auth Account account) {
-      com.google.protobuf.ByteString groupKey = null;
-      Jedis jedis = cacheClient.getReadResource();
-      byte[] groupByte = jedis.hget(GROUP_REDIS_KEY.getBytes(), groupKey.toByteArray());
-      jedis.close();
-      Group group = null;
-      try {
-          group = Group.parseFrom(groupByte);
-          return GroupAttributeBlob.newBuilder().setAvatar(group.getAvatarBytes())
-                  .setTitle(group.getTitle().toString()).setDisappearingMessagesDuration(3).build();
-      } catch (InvalidProtocolBufferException e) {
-          e.printStackTrace();
-      }
-      return null;
-  }
+    @Timed
+    @GET
+    @Consumes("application/x-protobuf")
+    @Produces("application/x-protobuf")
+    public GroupAttributeBlob getGroup(@Auth GroupEntity groupEntity) {
+        var  groupKey= groupEntity.getGroupPublicParams();
+        try (Jedis jedis = cacheClient.getReadResource()) {
+            byte[] groupByte = jedis.hget(GROUP_REDIS_KEY.getBytes(), groupKey.serialize());
+            Group group = null;
+            try {
+                group = Group.parseFrom(groupByte);
+                return GroupAttributeBlob.newBuilder().setAvatar(group.getAvatarBytes())
+                        .setTitle(group.getTitle().toString()).setDisappearingMessagesDuration(3).build();
+            } catch (InvalidProtocolBufferException e) {
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-  @Timed
-  @PATCH
-  @Consumes("application/x-protobuf")
-  @Produces("application/x-protobuf")
-  public Group patchGroup(@Auth Account account, Group group) {
-      Jedis jedis =cacheClient.getWriteResource();
-      jedis.hset(GROUP_REDIS_KEY.getBytes(), group.getPublicKey().toByteArray(), group.toByteArray());
-      jedis.close();
-    return group;
-  }
+    @Timed
+    @PATCH
+    @Consumes("application/x-protobuf")
+    @Produces("application/x-protobuf")
+    public Group patchGroup(@Auth GroupEntity groupEntity, Group group) {
+        try (Jedis jedis = cacheClient.getWriteResource()) {
+            jedis.hset(GROUP_REDIS_KEY.getBytes(), group.getPublicKey().toByteArray(), group.toByteArray());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return group;
+    }
 
 }

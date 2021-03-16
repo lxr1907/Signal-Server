@@ -38,26 +38,17 @@ import io.dropwizard.auth.basic.BasicCredentials;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.jdbi3.JdbiFactory;
-import io.dropwizard.jersey.protobuf.InvalidProtocolBufferExceptionMapper;
 import io.dropwizard.jersey.protobuf.ProtobufBundle;
-import io.dropwizard.jersey.protobuf.ProtocolBufferMessageBodyProvider;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import liquibase.pro.packaged.T;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.jdbi.v3.core.Jdbi;
 import org.signal.zkgroup.ServerSecretParams;
 import org.signal.zkgroup.auth.ServerZkAuthOperations;
 import org.signal.zkgroup.profiles.ServerZkProfileOperations;
 import org.whispersystems.dispatch.DispatchManager;
-import org.whispersystems.textsecuregcm.auth.AccountAuthenticator;
-import org.whispersystems.textsecuregcm.auth.CertificateGenerator;
-import org.whispersystems.textsecuregcm.auth.DisabledPermittedAccount;
-import org.whispersystems.textsecuregcm.auth.DisabledPermittedAccountAuthenticator;
-import org.whispersystems.textsecuregcm.auth.ExternalServiceCredentialGenerator;
-import org.whispersystems.textsecuregcm.auth.TurnTokenGenerator;
+import org.whispersystems.textsecuregcm.auth.*;
 import org.whispersystems.textsecuregcm.controllers.*;
 import org.whispersystems.textsecuregcm.limits.RateLimiters;
 import org.whispersystems.textsecuregcm.liquibase.NameableMigrationsBundle;
@@ -85,36 +76,7 @@ import org.whispersystems.textsecuregcm.s3.PostPolicyGenerator;
 import org.whispersystems.textsecuregcm.sms.SmsSender;
 import org.whispersystems.textsecuregcm.sms.TwilioSmsSender;
 import org.whispersystems.textsecuregcm.sqs.DirectoryQueue;
-import org.whispersystems.textsecuregcm.storage.AbusiveHostRules;
-import org.whispersystems.textsecuregcm.storage.Account;
-import org.whispersystems.textsecuregcm.storage.AccountCleaner;
-import org.whispersystems.textsecuregcm.storage.AccountDatabaseCrawler;
-import org.whispersystems.textsecuregcm.storage.AccountDatabaseCrawlerCache;
-import org.whispersystems.textsecuregcm.storage.AccountDatabaseCrawlerListener;
-import org.whispersystems.textsecuregcm.storage.Accounts;
-import org.whispersystems.textsecuregcm.storage.AccountsManager;
-import org.whispersystems.textsecuregcm.storage.ActiveUserCounter;
-import org.whispersystems.textsecuregcm.storage.DirectoryManager;
-import org.whispersystems.textsecuregcm.storage.DirectoryReconciler;
-import org.whispersystems.textsecuregcm.storage.DirectoryReconciliationClient;
-import org.whispersystems.textsecuregcm.storage.FaultTolerantDatabase;
-import org.whispersystems.textsecuregcm.storage.Keys;
-import org.whispersystems.textsecuregcm.storage.Messages;
-import org.whispersystems.textsecuregcm.storage.MessagesCache;
-import org.whispersystems.textsecuregcm.storage.MessagesManager;
-import org.whispersystems.textsecuregcm.storage.PendingAccounts;
-import org.whispersystems.textsecuregcm.storage.PendingAccountsManager;
-import org.whispersystems.textsecuregcm.storage.PendingDevices;
-import org.whispersystems.textsecuregcm.storage.PendingDevicesManager;
-import org.whispersystems.textsecuregcm.storage.Profiles;
-import org.whispersystems.textsecuregcm.storage.ProfilesManager;
-import org.whispersystems.textsecuregcm.storage.PubSubManager;
-import org.whispersystems.textsecuregcm.storage.PushFeedbackProcessor;
-import org.whispersystems.textsecuregcm.storage.RemoteConfigs;
-import org.whispersystems.textsecuregcm.storage.RemoteConfigsManager;
-import org.whispersystems.textsecuregcm.storage.ReservedUsernames;
-import org.whispersystems.textsecuregcm.storage.Usernames;
-import org.whispersystems.textsecuregcm.storage.UsernamesManager;
+import org.whispersystems.textsecuregcm.storage.*;
 import org.whispersystems.textsecuregcm.util.Constants;
 import org.whispersystems.textsecuregcm.websocket.AuthenticatedConnectListener;
 import org.whispersystems.textsecuregcm.websocket.DeadLetterHandler;
@@ -130,13 +92,11 @@ import org.whispersystems.websocket.setup.WebSocketEnvironment;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletRegistration;
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 import java.security.Security;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.codahale.metrics.MetricRegistry.name;
 
@@ -202,6 +162,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         config.getAbuseDatabaseConfiguration().getCircuitBreakerConfiguration());
 
     Accounts accounts = new Accounts(accountDatabase);
+    Groups groups = new Groups(accountDatabase);
     PendingAccounts pendingAccounts = new PendingAccounts(accountDatabase);
     PendingDevices pendingDevices = new PendingDevices(accountDatabase);
     Usernames usernames = new Usernames(accountDatabase);
@@ -241,6 +202,8 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
     PendingAccountsManager pendingAccountsManager = new PendingAccountsManager(pendingAccounts, cacheClient);
     PendingDevicesManager pendingDevicesManager = new PendingDevicesManager(pendingDevices, cacheClient);
     AccountsManager accountsManager = new AccountsManager(accounts, directory, cacheClient);
+    //群组验证接口相关
+    GroupsManager groupsManager = new GroupsManager(groups, cacheClient);
     UsernamesManager usernamesManager = new UsernamesManager(usernames, reservedUsernames, cacheClient);
     ProfilesManager profilesManager = new ProfilesManager(profiles, cacheClient);
     MessagesCache messagesCache = new MessagesCache(messagesClient, messages, accountsManager,
@@ -255,7 +218,15 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
     WebsocketSender websocketSender = new WebsocketSender(messagesManager, pubSubManager);
     RateLimiters rateLimiters = new RateLimiters(config.getLimitsConfiguration(), cacheClient);
 
+//用户验证
     AccountAuthenticator accountAuthenticator = new AccountAuthenticator(accountsManager);
+    ServerSecretParams zkSecretParams = new ServerSecretParams(config.getZkConfig().getServerSecret());
+    ServerZkAuthOperations zkAuthOperations = new ServerZkAuthOperations(zkSecretParams);
+    //群组验证
+/**
+ * lxr 20210316
+ */
+    GroupAuthenticator groupAuthenticator = new GroupAuthenticator(groupsManager,zkAuthOperations);
     DisabledPermittedAccountAuthenticator disabledPermittedAccountAuthenticator = new DisabledPermittedAccountAuthenticator(
         accountsManager);
 
@@ -322,7 +293,6 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
     environment.lifecycle().manage(messagesCache);
     environment.lifecycle().manage(accountDatabaseCrawler);
     environment.lifecycle().manage(remoteConfigsManager);
-
     AWSCredentials credentials = new BasicAWSCredentials(config.getCdnConfiguration().getAccessKey(),
         config.getCdnConfiguration().getAccessSecret());
     AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(credentials);
@@ -334,9 +304,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
     PolicySigner profileCdnPolicySigner = new PolicySigner(config.getCdnConfiguration().getAccessSecret(),
         config.getCdnConfiguration().getRegion());
 
-    ServerSecretParams zkSecretParams = new ServerSecretParams(config.getZkConfig().getServerSecret());
     ServerZkProfileOperations zkProfileOperations = new ServerZkProfileOperations(zkSecretParams);
-    ServerZkAuthOperations zkAuthOperations = new ServerZkAuthOperations(zkSecretParams);
     boolean isZkEnabled = config.getZkConfig().isEnabled();
 
     AttachmentControllerV1 attachmentControllerV1 = new AttachmentControllerV1(rateLimiters,
@@ -366,12 +334,18 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         config.getRemoteConfigConfiguration().getAuthorizedTokens());
 
     AuthFilter<BasicCredentials, Account> accountAuthFilter = new BasicCredentialAuthFilter.Builder<Account>()
-        .setAuthenticator(accountAuthenticator).buildAuthFilter();
+            .setAuthenticator(accountAuthenticator).buildAuthFilter();
+    //群组验证
+    AuthFilter<BasicCredentials, GroupEntity> groupAuthFilter = new BasicCredentialAuthFilter.Builder<GroupEntity>()
+            .setAuthenticator(groupAuthenticator).buildAuthFilter();
     AuthFilter<BasicCredentials, DisabledPermittedAccount> disabledPermittedAccountAuthFilter = new BasicCredentialAuthFilter.Builder<DisabledPermittedAccount>()
         .setAuthenticator(disabledPermittedAccountAuthenticator).buildAuthFilter();
 
-    environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(Account.class,
-        accountAuthFilter, DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter)));
+      //群组验证
+      environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(Account.class,
+              accountAuthFilter)));
+      environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(GroupEntity.class,
+              groupAuthFilter, DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter)));
     environment.jersey().register(new PolymorphicAuthValueFactoryProvider.Binder<>(
         ImmutableSet.of(Account.class, DisabledPermittedAccount.class)));
 
