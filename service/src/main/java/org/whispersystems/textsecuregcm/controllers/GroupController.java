@@ -76,7 +76,9 @@ public class GroupController {
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     public Group getGroup(@Auth GroupEntity groupEntity) {
+        System.out.println("groupEntity:" + groupEntity);
         var groupKey = groupEntity.getGroupPublicParams();
+        System.out.println("groupEntity.groupKey:" + groupKey);
         try (Jedis jedis = cacheClient.getReadResource()) {
             byte[] groupByte = jedis.hget(GROUP_REDIS_KEY.getBytes(), groupKey.serialize());
             Group group = null;
