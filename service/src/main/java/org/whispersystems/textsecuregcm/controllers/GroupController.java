@@ -71,25 +71,35 @@ public class GroupController {
         System.out.println("group.title:" + group.getTitle().toByteArray().toString());
         System.out.println("group.avatar:" + group.getAvatar());
         System.out.println("group.getAccessControl:" + group.getAccessControl());
+        List<org.whispersystems.textsecuregcm.proto.Member> memberList = new ArrayList<>();
+
+        Group.Builder newGroupBuilder = group.toBuilder();
+        int i = 0;
         for (Member m : group.getMembersList()) {
-            System.out.println("group.members.role:" + m.getRole());
-            System.out.println("group.members.presentation:" + m.getPresentation().toString());
             ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(m.getPresentation().toByteArray());
             UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
             ProfileKeyCiphertext profileKeyCiphertext = presentation.getProfileKeyCiphertext();
-            m = m.toBuilder()
+            Member newMember = m.toBuilder()
                     .setUserId(ByteString.copyFrom(uuidCiphertext.serialize()))
                     .setProfileKey(ByteString.copyFrom(profileKeyCiphertext.serialize()))
                     .build();
+            memberList.add(newMember);
+            newGroupBuilder.setMembers(i, newMember);
+            i++;
+        }
+        Group newGroup = newGroupBuilder.build();
+        for (Member m : newGroup.getMembersList()) {
+            System.out.println("group.members.role:" + m.getRole());
+            System.out.println("group.members.presentation:" + m.getPresentation().toString());
             System.out.println("group.members.userid:" + m.getUserId());
             System.out.println("group.members.profileKey:" + m.getProfileKey());
         }
         try (Jedis jedis = cacheClient.getWriteResource()) {
-            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), group.toByteArray());
+            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return group;
+        return newGroup;
     }
 
     @Timed
