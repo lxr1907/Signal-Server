@@ -343,9 +343,9 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 
       //群组验证
       environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(Account.class,
-              accountAuthFilter, DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter)));
-      environment.jersey().register(new PolymorphicAuthDynamicFeature<>(ImmutableMap.of(GroupEntity.class,
-              groupAuthFilter)));
+              accountAuthFilter, DisabledPermittedAccount.class, disabledPermittedAccountAuthFilter,
+          GroupEntity.class,groupAuthFilter)));
+
     environment.jersey().register(new PolymorphicAuthValueFactoryProvider.Binder<>(
         ImmutableSet.of(Account.class, GroupEntity.class,DisabledPermittedAccount.class)));
 
