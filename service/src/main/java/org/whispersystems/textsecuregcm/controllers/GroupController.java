@@ -58,15 +58,14 @@ public class GroupController {
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     public Group saveGroup(@Auth GroupEntity groupEntity, Group group) {
-        var groupKey = group.getPublicKey();
+        var groupKey = groupEntity.getGroupPublicParams();
         var g = group;
-        System.out.println("group.publickey:" + g.getPublicKey().toString());
-        System.out.println("group.title:" + g.getTitle());
+        System.out.println("group.title:" + g.getTitle().toString());
         System.out.println("group.avatar:" + g.getAvatar());
         System.out.println("group.getAccessControl:" + g.getAccessControl());
         System.out.println("group.members0.userid:" + g.getMembers(0).getUserId());
         try (Jedis jedis = cacheClient.getWriteResource()) {
-            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.toByteArray(), group.toByteArray());
+            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), group.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -78,7 +77,7 @@ public class GroupController {
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     public GroupAttributeBlob getGroup(@Auth GroupEntity groupEntity) {
-        var  groupKey= groupEntity.getGroupPublicParams();
+        var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getReadResource()) {
             byte[] groupByte = jedis.hget(GROUP_REDIS_KEY.getBytes(), groupKey.serialize());
             Group group = null;
@@ -100,8 +99,9 @@ public class GroupController {
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     public Group patchGroup(@Auth GroupEntity groupEntity, Group group) {
+        var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getWriteResource()) {
-            jedis.hset(GROUP_REDIS_KEY.getBytes(), group.getPublicKey().toByteArray(), group.toByteArray());
+            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), group.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }

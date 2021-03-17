@@ -43,18 +43,10 @@ public class BaseGroupAuthenticator {
 
     public Optional<GroupEntity> authenticate(BasicCredentials basicCredentials, boolean enabledRequired) {
         try {
-            System.out.println("basicCredentials.getUsername:" + basicCredentials.getUsername());
-            System.out.println("basicCredentials.getPassword:" + basicCredentials.getPassword());
             AuthorizationGroupHeader authorizationHeader = AuthorizationGroupHeader.fromUserAndPassword(zkAuthOperations, basicCredentials.getUsername(), basicCredentials.getPassword());
             GroupEntity group = authorizationHeader.getGroupEntity();
 
             GroupEntity g = group;
-            System.out.println("authorizationHeader.password:" + authorizationHeader.getPassword());
-            System.out.println("GroupEntity.publickey:" + g.getGroupPublicParams().toString());
-            System.out.println("GroupEntity.title:" + g.getTitle());
-            System.out.println("GroupEntity.avatar:" + g.getAvatar());
-            System.out.println("GroupEntity.uuid:" + g.getUuid());
-            System.out.println("GroupEntity.date:" + g.getDate());
 
 //      Optional<Device> device = group.get().getDevice(authorizationHeader.getDeviceId());
 
