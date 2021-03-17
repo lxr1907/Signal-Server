@@ -76,15 +76,14 @@ public class GroupController {
     @GET
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupAttributeBlob getGroup(@Auth GroupEntity groupEntity) {
+    public Group getGroup(@Auth GroupEntity groupEntity) {
         var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getReadResource()) {
             byte[] groupByte = jedis.hget(GROUP_REDIS_KEY.getBytes(), groupKey.serialize());
             Group group = null;
             try {
                 group = Group.parseFrom(groupByte);
-                return GroupAttributeBlob.newBuilder().setAvatar(group.getAvatarBytes())
-                        .setTitle(group.getTitle().toString()).setDisappearingMessagesDuration(3).build();
+                return group;
             } catch (InvalidProtocolBufferException e) {
                 e.printStackTrace();
             }
