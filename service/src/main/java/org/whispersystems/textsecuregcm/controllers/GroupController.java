@@ -88,9 +88,11 @@ public class GroupController {
                 System.out.println("group.members0.userid:" + group.getMembers(0).getUserId());
                 return group;
             } catch (InvalidProtocolBufferException e) {
+                System.out.println(e.getMessage());
                 e.printStackTrace();
             }
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             e.printStackTrace();
         }
         return null;
