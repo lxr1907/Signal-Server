@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.proto.Group;
 import org.whispersystems.textsecuregcm.proto.GroupAttributeBlob;
+import org.whispersystems.textsecuregcm.proto.Member;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 import org.whispersystems.textsecuregcm.storage.GroupEntity;
@@ -62,7 +63,11 @@ public class GroupController {
         System.out.println("group.title:" + group.getTitle().toByteArray().toString());
         System.out.println("group.avatar:" + group.getAvatar());
         System.out.println("group.getAccessControl:" + group.getAccessControl());
-        System.out.println("group.members0.userid:" + group.getMembers(0).getUserId());
+        for (Member m:group.getMembersList()) {
+            System.out.println("group.members.userid:" + m.getUserId());
+            System.out.println("group.members.profileKey:" + m.getProfileKey());
+            System.out.println("group.members.role:" + m.getRole());
+        }
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), group.toByteArray());
         } catch (Exception e) {
