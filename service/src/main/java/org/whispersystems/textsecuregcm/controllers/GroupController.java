@@ -59,11 +59,10 @@ public class GroupController {
     @Produces("application/x-protobuf")
     public Group saveGroup(@Auth GroupEntity groupEntity, Group group) {
         var groupKey = groupEntity.getGroupPublicParams();
-        var g = group;
-        System.out.println("group.title:" + g.getTitle().toString());
-        System.out.println("group.avatar:" + g.getAvatar());
-        System.out.println("group.getAccessControl:" + g.getAccessControl());
-        System.out.println("group.members0.userid:" + g.getMembers(0).getUserId());
+        System.out.println("group.title:" + group.getTitle().toByteArray().toString());
+        System.out.println("group.avatar:" + group.getAvatar());
+        System.out.println("group.getAccessControl:" + group.getAccessControl());
+        System.out.println("group.members0.userid:" + group.getMembers(0).getUserId());
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), group.toByteArray());
         } catch (Exception e) {
@@ -83,6 +82,10 @@ public class GroupController {
             Group group = null;
             try {
                 group = Group.parseFrom(groupByte);
+                System.out.println("group.title:" + group.getTitle().toByteArray().toString());
+                System.out.println("group.avatar:" + group.getAvatar());
+                System.out.println("group.getAccessControl:" + group.getAccessControl());
+                System.out.println("group.members0.userid:" + group.getMembers(0).getUserId());
                 return group;
             } catch (InvalidProtocolBufferException e) {
                 e.printStackTrace();
