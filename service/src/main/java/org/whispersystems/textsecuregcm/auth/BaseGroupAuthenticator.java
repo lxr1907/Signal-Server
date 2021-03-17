@@ -49,6 +49,7 @@ public class BaseGroupAuthenticator {
             GroupEntity group = authorizationHeader.getGroupEntity();
 
             GroupEntity g = group;
+            System.out.println("authorizationHeader.password:" + authorizationHeader.getPassword());
             System.out.println("GroupEntity.publickey:" + g.getGroupPublicParams().toString());
             System.out.println("GroupEntity.title:" + g.getTitle());
             System.out.println("GroupEntity.avatar:" + g.getAvatar());
