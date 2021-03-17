@@ -17,8 +17,14 @@
 package org.whispersystems.textsecuregcm.controllers;
 
 import com.codahale.metrics.annotation.Timed;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.dropwizard.auth.Auth;
+import org.signal.zkgroup.InvalidInputException;
+import org.signal.zkgroup.auth.AuthCredentialPresentation;
+import org.signal.zkgroup.groups.ClientZkGroupCipher;
+import org.signal.zkgroup.groups.GroupSecretParams;
+import org.signal.zkgroup.groups.UuidCiphertext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.proto.Group;
@@ -58,15 +64,19 @@ public class GroupController {
     @PUT
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public Group saveGroup(@Auth GroupEntity groupEntity, Group group) {
+    public Group saveGroup(@Auth GroupEntity groupEntity, Group group) throws InvalidInputException {
         var groupKey = groupEntity.getGroupPublicParams();
         System.out.println("group.title:" + group.getTitle().toByteArray().toString());
         System.out.println("group.avatar:" + group.getAvatar());
         System.out.println("group.getAccessControl:" + group.getAccessControl());
-        for (Member m:group.getMembersList()) {
+        for (Member m : group.getMembersList()) {
+            System.out.println("group.members.role:" + m.getRole());
+            System.out.println("group.members.presentation:" + m.getPresentation().toString());
+            AuthCredentialPresentation presentation = new AuthCredentialPresentation(m.getPresentation().toByteArray());
+            UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
+            m = m.toBuilder().setUserId(ByteString.copyFrom(uuidCiphertext.serialize())).build();
             System.out.println("group.members.userid:" + m.getUserId());
             System.out.println("group.members.profileKey:" + m.getProfileKey());
-            System.out.println("group.members.role:" + m.getRole());
         }
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), group.toByteArray());
