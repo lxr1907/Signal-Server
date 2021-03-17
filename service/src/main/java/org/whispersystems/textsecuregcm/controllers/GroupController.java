@@ -24,7 +24,9 @@ import org.signal.zkgroup.InvalidInputException;
 import org.signal.zkgroup.auth.AuthCredentialPresentation;
 import org.signal.zkgroup.groups.ClientZkGroupCipher;
 import org.signal.zkgroup.groups.GroupSecretParams;
+import org.signal.zkgroup.groups.ProfileKeyCiphertext;
 import org.signal.zkgroup.groups.UuidCiphertext;
+import org.signal.zkgroup.profiles.ProfileKeyCredentialPresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.proto.Group;
@@ -72,9 +74,13 @@ public class GroupController {
         for (Member m : group.getMembersList()) {
             System.out.println("group.members.role:" + m.getRole());
             System.out.println("group.members.presentation:" + m.getPresentation().toString());
-            AuthCredentialPresentation presentation = new AuthCredentialPresentation(m.getPresentation().toByteArray());
+            ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(m.getPresentation().toByteArray());
             UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
-            m = m.toBuilder().setUserId(ByteString.copyFrom(uuidCiphertext.serialize())).build();
+            ProfileKeyCiphertext profileKeyCiphertext = presentation.getProfileKeyCiphertext();
+            m = m.toBuilder()
+                    .setUserId(ByteString.copyFrom(uuidCiphertext.serialize()))
+                    .setProfileKey(ByteString.copyFrom(profileKeyCiphertext.serialize()))
+                    .build();
             System.out.println("group.members.userid:" + m.getUserId());
             System.out.println("group.members.profileKey:" + m.getProfileKey());
         }
