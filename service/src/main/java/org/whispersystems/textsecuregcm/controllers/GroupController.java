@@ -135,10 +135,32 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public Group patchGroup(@Auth GroupEntity groupEntity, Group group) {
+    public Group patchGroup(@Auth GroupEntity groupEntity, Group group) throws InvalidInputException {
         var groupKey = groupEntity.getGroupPublicParams();
+        Group.Builder newGroupBuilder = group.toBuilder();
+        List<org.whispersystems.textsecuregcm.proto.Member> memberList = new ArrayList<>();
+        int i = 0;
+        for (Member m : group.getMembersList()) {
+            ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(m.getPresentation().toByteArray());
+            UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
+            ProfileKeyCiphertext profileKeyCiphertext = presentation.getProfileKeyCiphertext();
+            Member newMember = m.toBuilder()
+                    .setUserId(ByteString.copyFrom(uuidCiphertext.serialize()))
+                    .setProfileKey(ByteString.copyFrom(profileKeyCiphertext.serialize()))
+                    .build();
+            memberList.add(newMember);
+            newGroupBuilder.setMembers(i, newMember);
+            i++;
+        }
+        Group newGroup = newGroupBuilder.build();
+        for (Member m : newGroup.getMembersList()) {
+            System.out.println("group.members.role:" + m.getRole());
+            System.out.println("group.members.presentation:" + m.getPresentation().toString());
+            System.out.println("group.members.userid:" + m.getUserId());
+            System.out.println("group.members.profileKey:" + m.getProfileKey());
+        }
         try (Jedis jedis = cacheClient.getWriteResource()) {
-            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), group.toByteArray());
+            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
