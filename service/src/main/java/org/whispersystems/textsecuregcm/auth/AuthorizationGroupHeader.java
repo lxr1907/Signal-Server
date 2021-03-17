@@ -46,8 +46,8 @@ public class AuthorizationGroupHeader {
 
     public static AuthorizationGroupHeader fromUserAndPassword(ServerZkAuthOperations zkAuthOperations, String user, String password) throws InvalidAuthorizationHeaderException {
         try {
-            zkAuthOperations.verifyAuthCredentialPresentation(new GroupPublicParams(user.getBytes(StandardCharsets.UTF_8)),
-                    new AuthCredentialPresentation(password.getBytes(StandardCharsets.UTF_8)));
+            zkAuthOperations.verifyAuthCredentialPresentation(new GroupPublicParams(Base64.encodeBytesToBytes(user.getBytes(StandardCharsets.UTF_8))),
+                    new AuthCredentialPresentation(Base64.encodeBytesToBytes(password.getBytes(StandardCharsets.UTF_8))));
             GroupEntity groupEntity = new GroupEntity();
             groupEntity.setGroupPublicParams(new GroupPublicParams(user.getBytes(StandardCharsets.UTF_8)));
             return new AuthorizationGroupHeader(groupEntity,
