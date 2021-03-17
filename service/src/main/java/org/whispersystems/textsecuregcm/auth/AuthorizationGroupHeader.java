@@ -17,7 +17,6 @@
 package org.whispersystems.textsecuregcm.auth;
 
 
-import liquibase.pro.packaged.G;
 import org.signal.zkgroup.InvalidInputException;
 import org.signal.zkgroup.InvalidRedemptionTimeException;
 import org.signal.zkgroup.ServerSecretParams;
@@ -27,9 +26,6 @@ import org.signal.zkgroup.auth.ServerZkAuthOperations;
 import org.signal.zkgroup.groups.GroupPublicParams;
 import org.whispersystems.textsecuregcm.storage.GroupEntity;
 import org.whispersystems.textsecuregcm.util.Base64;
-import org.whispersystems.textsecuregcm.util.Util;
-
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**
