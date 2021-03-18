@@ -1,19 +1,4 @@
-/*
- * Copyright (C) 2013 Open WhisperSystems
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+
 package org.whispersystems.textsecuregcm.controllers;
 
 import com.codahale.metrics.annotation.Timed;
@@ -137,18 +122,13 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange groupChange) throws InvalidProtocolBufferException {
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) throws InvalidProtocolBufferException {
         Group group = getGroup(groupEntity);
-        System.out.println("groupChange.getActions:" + groupChange.getActions());
-        GroupChange.Actions actions = GroupChange.Actions.parseFrom(groupChange.getActions());
         System.out.println("groupChange.actions:" + actions);
-        System.out.println("groupChange.getChangeEpoch:" + groupChange.getChangeEpoch());
-        System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
-        GroupChange.Builder newGroupBuilder = groupChange.toBuilder();
-        NotarySignature notarySignature = serverSecretParams.sign(groupChange.getActions().toByteArray());
+        NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
         ByteString signature = ByteString.copyFrom(notarySignature.serialize());
-        newGroupBuilder.setActions(groupChange.getActions()).setChangeEpoch(groupChange.getChangeEpoch()).setServerSignature(signature).build();
-        GroupChange newGroupChange = newGroupBuilder.build();
+        GroupChange.Builder newGroupChange = GroupChange.newBuilder();
+        newGroupChange.setActions(ByteString.copyFrom(actions.toByteArray())).setChangeEpoch(1).setServerSignature(signature).build();
         System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
         System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
         System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
@@ -163,7 +143,7 @@ public class GroupController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return newGroupChange;
+        return newGroupChange.build();
     }
 
 }
