@@ -120,7 +120,7 @@ public class GroupController {
                 System.out.println("group.title:" + group.getTitle().toByteArray().toString());
                 System.out.println("group.avatar:" + group.getAvatar());
                 System.out.println("group.getAccessControl:" + group.getAccessControl());
-                System.out.println("group.members0.userid:" + group.getMembers(0).getUserId());
+                System.out.println("group.members.size:" + group.getMembersList().size());
                 return group;
             } catch (InvalidProtocolBufferException e) {
                 System.out.println(e.getMessage());
