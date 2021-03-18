@@ -20,14 +20,13 @@ import org.whispersystems.textsecuregcm.proto.*;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 import org.whispersystems.textsecuregcm.storage.GroupEntity;
+import org.whispersystems.textsecuregcm.util.Util;
 import redis.clients.jedis.Jedis;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.Instant;
+import java.util.*;
 
 
 /**
@@ -122,13 +121,16 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) throws InvalidProtocolBufferException {
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) {
         Group group = getGroup(groupEntity);
         System.out.println("groupChange.actions:" + actions);
         NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
         ByteString signature = ByteString.copyFrom(notarySignature.serialize());
         GroupChange.Builder newGroupChange = GroupChange.newBuilder();
-        newGroupChange.setActions(ByteString.copyFrom(actions.toByteArray())).setChangeEpoch(1).setServerSignature(signature).build();
+        newGroupChange
+                .setActions(ByteString.copyFrom(actions.toByteArray()))
+                .setChangeEpoch(Util.currentDaysSinceEpoch())
+                .setServerSignature(signature).build();
         System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
         System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
         System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
