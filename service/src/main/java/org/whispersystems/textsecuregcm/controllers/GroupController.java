@@ -137,26 +137,33 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChanges patchGroup(@Auth GroupEntity groupEntity, GroupChanges groupChanges) throws InvalidInputException {
-        System.out.println("groupChanges:" + groupChanges.getGroupChangesCount());
-        GroupChanges groupChangesNew = groupChanges.toBuilder().build();
-        groupChanges.getGroupChangesList().forEach(groupChange -> {
-            System.out.println("groupChange.getChangeEpoch:" + groupChange.getGroupChange().getChangeEpoch());
-            System.out.println("groupChange.getServerSignature:" + groupChange.getGroupChange().getServerSignature());
-            GroupChange.Builder newGroupBuilder = groupChange.getGroupChange().toBuilder();
-            NotarySignature notarySignature = serverSecretParams.sign(groupChange.getGroupChange().getActions().toByteArray());
-            ByteString signature = ByteString.copyFrom(notarySignature.serialize());
-            newGroupBuilder.setActions(groupChange.getGroupChange().getActions()).setChangeEpoch(groupChange.getGroupChange().getChangeEpoch()).setServerSignature(signature).build();
-            GroupChange newGroupChange = newGroupBuilder.build();
-            System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
-            System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
-            System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
-            GroupChanges.GroupChangeState.Builder builder = groupChange.toBuilder();
-            builder.setGroupChange(newGroupChange);
-            builder.setGroupState(groupChange.getGroupState());
-            groupChangesNew.getGroupChangesList().add(builder.build());
-        });
-        return groupChangesNew;
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange groupChange) throws InvalidProtocolBufferException {
+        Group group = getGroup(groupEntity);
+        System.out.println("groupChange.getActions:" + groupChange.getActions());
+        GroupChange.Actions actions = GroupChange.Actions.parseFrom(groupChange.getActions());
+        System.out.println("groupChange.actions:" + actions);
+        System.out.println("groupChange.getChangeEpoch:" + groupChange.getChangeEpoch());
+        System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
+        GroupChange.Builder newGroupBuilder = groupChange.toBuilder();
+        NotarySignature notarySignature = serverSecretParams.sign(groupChange.getActions().toByteArray());
+        ByteString signature = ByteString.copyFrom(notarySignature.serialize());
+        newGroupBuilder.setActions(groupChange.getActions()).setChangeEpoch(groupChange.getChangeEpoch()).setServerSignature(signature).build();
+        GroupChange newGroupChange = newGroupBuilder.build();
+        System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
+        System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
+        System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
+
+        ByteString title = actions.getModifyTitle().getTitle();
+        System.out.println("groupChange.getModifyTitle:" + title);
+        Group.Builder builder = group.toBuilder();
+        builder.setTitle(title);
+        Group groupNew = builder.build();
+        try (Jedis jedis = cacheClient.getWriteResource()) {
+            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupNew.getPublicKey().toByteArray(), groupNew.toByteArray());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return newGroupChange;
     }
 
 }
