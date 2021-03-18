@@ -31,10 +31,7 @@ import org.signal.zkgroup.groups.UuidCiphertext;
 import org.signal.zkgroup.profiles.ProfileKeyCredentialPresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.whispersystems.textsecuregcm.proto.Group;
-import org.whispersystems.textsecuregcm.proto.GroupAttributeBlob;
-import org.whispersystems.textsecuregcm.proto.GroupChange;
-import org.whispersystems.textsecuregcm.proto.Member;
+import org.whispersystems.textsecuregcm.proto.*;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
 import org.whispersystems.textsecuregcm.storage.GroupEntity;
@@ -140,19 +137,25 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange groupChange) throws InvalidInputException {
-        System.out.println("groupChange.getActions:" + groupChange.getActions());
-        System.out.println("groupChange.getChangeEpoch:" + groupChange.getChangeEpoch());
-        System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
-        GroupChange.Builder newGroupBuilder = groupChange.toBuilder();
-        NotarySignature notarySignature = serverSecretParams.sign(groupChange.getActions().toByteArray());
-        ByteString signature = ByteString.copyFrom(notarySignature.serialize());
-        newGroupBuilder.setActions(groupChange.getActions()).setChangeEpoch(groupChange.getChangeEpoch()).setServerSignature(signature).build();
-        GroupChange newGroupChange = newGroupBuilder.build();
-        System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
-        System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
-        System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
-        return newGroupChange;
+    public GroupChanges patchGroup(@Auth GroupEntity groupEntity, GroupChanges groupChanges) throws InvalidInputException {
+        GroupChanges groupChangesNew = groupChanges.toBuilder().build();
+        groupChanges.getGroupChangesList().forEach(groupChange -> {
+            System.out.println("groupChange.getChangeEpoch:" + groupChange.getGroupChange().getChangeEpoch());
+            System.out.println("groupChange.getServerSignature:" + groupChange.getGroupChange().getServerSignature());
+            GroupChange.Builder newGroupBuilder = groupChange.getGroupChange().toBuilder();
+            NotarySignature notarySignature = serverSecretParams.sign(groupChange.getGroupChange().getActions().toByteArray());
+            ByteString signature = ByteString.copyFrom(notarySignature.serialize());
+            newGroupBuilder.setActions(groupChange.getGroupChange().getActions()).setChangeEpoch(groupChange.getGroupChange().getChangeEpoch()).setServerSignature(signature).build();
+            GroupChange newGroupChange = newGroupBuilder.build();
+            System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
+            System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
+            System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
+            GroupChanges.GroupChangeState.Builder builder = groupChange.toBuilder();
+            builder.setGroupChange(newGroupChange);
+            builder.setGroupState(groupChange.getGroupState());
+            groupChangesNew.getGroupChangesList().add(builder.build());
+        });
+        return groupChangesNew;
     }
 
 }
