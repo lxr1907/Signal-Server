@@ -138,6 +138,7 @@ public class GroupController {
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     public GroupChanges patchGroup(@Auth GroupEntity groupEntity, GroupChanges groupChanges) throws InvalidInputException {
+        System.out.println("groupChanges:" + groupChanges.getGroupChangesCount());
         GroupChanges groupChangesNew = groupChanges.toBuilder().build();
         groupChanges.getGroupChangesList().forEach(groupChange -> {
             System.out.println("groupChange.getChangeEpoch:" + groupChange.getGroupChange().getChangeEpoch());
