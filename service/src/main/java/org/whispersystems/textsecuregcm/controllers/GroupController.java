@@ -121,7 +121,7 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) throws VerificationFailedException {
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) {
         Group group = getGroup(groupEntity);
         System.out.println("groupChange.actions:" + actions);
         NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
@@ -132,13 +132,13 @@ public class GroupController {
                 .setChangeEpoch(Util.currentDaysSinceEpoch())
                 .setServerSignature(signature).build();
 
-        System.out.println("end groupChange.getActions:" + newGroupChange.getActions().toByteArray());
+        System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
         System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
-        System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature().toByteArray());
+        System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
 
         //实际取出群名称，写入redis
         ByteString title = actions.getModifyTitle().getTitle();
-        System.out.println("groupChange.getModifyTitle:" + title.toString());
+        System.out.println("groupChange.getModifyTitle:" + title);
         Group.Builder builder = group.toBuilder();
         builder.setTitle(title);
         Group groupNew = builder.build();
@@ -148,7 +148,7 @@ public class GroupController {
             e.printStackTrace();
         }
 
-        serverPublicParams.verifySignature(newGroupChange.getActions().toByteArray(), notarySignature);
+        // serverPublicParams.verifySignature(newGroupChange.getActions().toByteArray(), notarySignature);
         return groupChange;
     }
 
