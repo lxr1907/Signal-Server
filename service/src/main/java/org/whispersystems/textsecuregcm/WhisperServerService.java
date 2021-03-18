@@ -44,6 +44,7 @@ import io.dropwizard.setup.Environment;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.jdbi.v3.core.Jdbi;
+import org.signal.zkgroup.ServerPublicParams;
 import org.signal.zkgroup.ServerSecretParams;
 import org.signal.zkgroup.auth.ServerZkAuthOperations;
 import org.signal.zkgroup.profiles.ServerZkProfileOperations;
@@ -221,6 +222,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 //用户验证
     AccountAuthenticator accountAuthenticator = new AccountAuthenticator(accountsManager);
     ServerSecretParams zkSecretParams = new ServerSecretParams(config.getZkConfig().getServerSecret());
+    ServerPublicParams serverPublicParams = new ServerPublicParams(config.getZkConfig().getServerPublic());
     ServerZkAuthOperations zkAuthOperations = new ServerZkAuthOperations(zkSecretParams);
     //群组验证
 /**
@@ -364,7 +366,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         .register(new VoiceVerificationController(config.getVoiceVerificationConfiguration().getUrl(),
             config.getVoiceVerificationConfiguration().getLocales()));
     //增加群组功能
-    GroupController group = new GroupController(cacheClient,zkSecretParams);
+    GroupController group = new GroupController(cacheClient,zkSecretParams,serverPublicParams);
     environment.jersey().register(new SecureStorageController(storageCredentialsGenerator));
     environment.jersey().register(new SecureBackupController(backupCredentialsGenerator));
     environment.jersey().register(attachmentControllerV1);

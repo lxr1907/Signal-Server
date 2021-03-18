@@ -5,9 +5,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.dropwizard.auth.Auth;
-import org.signal.zkgroup.InvalidInputException;
-import org.signal.zkgroup.NotarySignature;
-import org.signal.zkgroup.ServerSecretParams;
+import org.signal.zkgroup.*;
 import org.signal.zkgroup.auth.AuthCredentialPresentation;
 import org.signal.zkgroup.groups.ClientZkGroupCipher;
 import org.signal.zkgroup.groups.GroupSecretParams;
@@ -38,10 +36,12 @@ public class GroupController {
     private final Logger logger = LoggerFactory.getLogger(GroupController.class);
     protected final ReplicatedJedisPool cacheClient;
     private ServerSecretParams serverSecretParams;
+    private ServerPublicParams serverPublicParams;
 
-    public GroupController(ReplicatedJedisPool cacheClient, ServerSecretParams serverSecretParams) {
+    public GroupController(ReplicatedJedisPool cacheClient, ServerSecretParams serverSecretParams, ServerPublicParams serverPublicParams) {
         this.cacheClient = cacheClient;
         this.serverSecretParams = serverSecretParams;
+        this.serverPublicParams = serverPublicParams;
     }
 
     public static final String GROUP_REDIS_KEY = "group_";
@@ -121,22 +121,24 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) {
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) throws VerificationFailedException {
         Group group = getGroup(groupEntity);
         System.out.println("groupChange.actions:" + actions);
         NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
         ByteString signature = ByteString.copyFrom(notarySignature.serialize());
         GroupChange.Builder newGroupChange = GroupChange.newBuilder();
-        newGroupChange
+        GroupChange groupChange = newGroupChange
                 .setActions(ByteString.copyFrom(actions.toByteArray()))
                 .setChangeEpoch(Util.currentDaysSinceEpoch())
                 .setServerSignature(signature).build();
-        System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
-        System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
-        System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
 
+        System.out.println("end groupChange.getActions:" + newGroupChange.getActions().toByteArray());
+        System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
+        System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature().toByteArray());
+
+        //实际取出群名称，写入redis
         ByteString title = actions.getModifyTitle().getTitle();
-        System.out.println("groupChange.getModifyTitle:" + title);
+        System.out.println("groupChange.getModifyTitle:" + title.toString());
         Group.Builder builder = group.toBuilder();
         builder.setTitle(title);
         Group groupNew = builder.build();
@@ -145,7 +147,9 @@ public class GroupController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return newGroupChange.build();
+
+        serverPublicParams.verifySignature(newGroupChange.getActions().toByteArray(), notarySignature);
+        return groupChange;
     }
 
 }
