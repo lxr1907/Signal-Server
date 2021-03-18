@@ -364,7 +364,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         .register(new VoiceVerificationController(config.getVoiceVerificationConfiguration().getUrl(),
             config.getVoiceVerificationConfiguration().getLocales()));
     //增加群组功能
-    GroupController group = new GroupController(cacheClient);
+    GroupController group = new GroupController(cacheClient,zkSecretParams);
     environment.jersey().register(new SecureStorageController(storageCredentialsGenerator));
     environment.jersey().register(new SecureBackupController(backupCredentialsGenerator));
     environment.jersey().register(attachmentControllerV1);

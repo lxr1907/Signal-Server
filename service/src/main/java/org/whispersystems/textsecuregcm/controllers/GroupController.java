@@ -21,6 +21,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.dropwizard.auth.Auth;
 import org.signal.zkgroup.InvalidInputException;
+import org.signal.zkgroup.NotarySignature;
+import org.signal.zkgroup.ServerSecretParams;
 import org.signal.zkgroup.auth.AuthCredentialPresentation;
 import org.signal.zkgroup.groups.ClientZkGroupCipher;
 import org.signal.zkgroup.groups.GroupSecretParams;
@@ -31,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.proto.Group;
 import org.whispersystems.textsecuregcm.proto.GroupAttributeBlob;
+import org.whispersystems.textsecuregcm.proto.GroupChange;
 import org.whispersystems.textsecuregcm.proto.Member;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
@@ -53,9 +56,11 @@ public class GroupController {
 
     private final Logger logger = LoggerFactory.getLogger(GroupController.class);
     protected final ReplicatedJedisPool cacheClient;
+    private ServerSecretParams serverSecretParams;
 
-    public GroupController(ReplicatedJedisPool cacheClient) {
+    public GroupController(ReplicatedJedisPool cacheClient, ServerSecretParams serverSecretParams) {
         this.cacheClient = cacheClient;
+        this.serverSecretParams = serverSecretParams;
     }
 
     public static final String GROUP_REDIS_KEY = "group_";
@@ -135,36 +140,19 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public Group patchGroup(@Auth GroupEntity groupEntity, Group group) throws InvalidInputException {
-        var groupKey = groupEntity.getGroupPublicParams();
-        Group.Builder newGroupBuilder = group.toBuilder();
-        List<org.whispersystems.textsecuregcm.proto.Member> memberList = new ArrayList<>();
-        int i = 0;
-        for (Member m : group.getMembersList()) {
-            ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(m.getPresentation().toByteArray());
-            UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
-            ProfileKeyCiphertext profileKeyCiphertext = presentation.getProfileKeyCiphertext();
-            Member newMember = m.toBuilder()
-                    .setUserId(ByteString.copyFrom(uuidCiphertext.serialize()))
-                    .setProfileKey(ByteString.copyFrom(profileKeyCiphertext.serialize()))
-                    .build();
-            memberList.add(newMember);
-            newGroupBuilder.setMembers(i, newMember);
-            i++;
-        }
-        Group newGroup = newGroupBuilder.build();
-        for (Member m : newGroup.getMembersList()) {
-            System.out.println("group.members.role:" + m.getRole());
-            System.out.println("group.members.presentation:" + m.getPresentation().toString());
-            System.out.println("group.members.userid:" + m.getUserId());
-            System.out.println("group.members.profileKey:" + m.getProfileKey());
-        }
-        try (Jedis jedis = cacheClient.getWriteResource()) {
-            jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return group;
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange groupChange) throws InvalidInputException {
+        System.out.println("groupChange.getActions:" + groupChange.getActions());
+        System.out.println("groupChange.getChangeEpoch:" + groupChange.getChangeEpoch());
+        System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
+        GroupChange.Builder newGroupBuilder = groupChange.toBuilder();
+        NotarySignature notarySignature = serverSecretParams.sign(groupChange.getActions().toByteArray());
+        ByteString signature = ByteString.copyFrom(notarySignature.serialize());
+        newGroupBuilder.setActions(groupChange.getActions()).setChangeEpoch(groupChange.getChangeEpoch()).setServerSignature(signature).build();
+        GroupChange newGroupChange = newGroupBuilder.build();
+        System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
+        System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
+        System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
+        return newGroupChange;
     }
 
 }
