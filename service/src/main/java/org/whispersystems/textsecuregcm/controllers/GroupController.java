@@ -7,10 +7,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.dropwizard.auth.Auth;
 import org.signal.zkgroup.*;
 import org.signal.zkgroup.auth.AuthCredentialPresentation;
-import org.signal.zkgroup.groups.ClientZkGroupCipher;
-import org.signal.zkgroup.groups.GroupSecretParams;
-import org.signal.zkgroup.groups.ProfileKeyCiphertext;
-import org.signal.zkgroup.groups.UuidCiphertext;
+import org.signal.zkgroup.groups.*;
 import org.signal.zkgroup.profiles.ProfileKeyCredentialPresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -130,11 +127,14 @@ public class GroupController {
         System.out.println("getGroupLogs:" + groupEntity);
         System.out.println("getGroupLogs:" + groupEntity);
         var groupKey = groupEntity.getGroupPublicParams();
-        System.out.println("getGroupLogs.redisKey:" + (GROUP_CHANGE_REDIS_KEY + groupKey.serialize()));
+        System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
         try (Jedis jedis = cacheClient.getReadResource()) {
-            byte[] groupByte = jedis.lindex((GROUP_CHANGE_REDIS_KEY + groupKey.serialize()).getBytes(), index);
+            byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey).getBytes(), index);
             GroupChange groupChange = null;
             try {
+                if (groupByte.length == 0) {
+                    return null;
+                }
                 groupChange = GroupChange.parseFrom(groupByte);
                 System.out.println("groupChange.getActions:" + groupChange.getActions());
                 System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
@@ -148,6 +148,10 @@ public class GroupController {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private String getGroupLogsKey(GroupPublicParams groupPublicParams) {
+        return GROUP_CHANGE_REDIS_KEY + new String(groupPublicParams.serialize());
     }
 
     @Timed
@@ -182,8 +186,8 @@ public class GroupController {
         var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupNew.getPublicKey().toByteArray(), groupNew.toByteArray());
-            System.out.println("getGroupLogs.redisKey:" + (GROUP_CHANGE_REDIS_KEY + groupKey.serialize()));
-            jedis.lpush((GROUP_CHANGE_REDIS_KEY +  groupKey.serialize()).getBytes(), groupChange.toByteArray());
+            System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
+            jedis.lpush(getGroupLogsKey(groupKey).getBytes(), groupChange.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
