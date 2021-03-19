@@ -118,6 +118,37 @@ public class GroupController {
     }
 
     @Timed
+    @GET
+    @Consumes("application/x-protobuf")
+    @Produces("application/x-protobuf")
+    @Path("/logs/{version}")
+    public Group getGroupLogs(@Auth GroupEntity groupEntity, @PathParam("version") int version) {
+        System.out.println("getGroupLogs version:" + version);
+        System.out.println("getGroupLogs:" + groupEntity);
+        System.out.println("getGroupLogs:" + groupEntity);
+        var groupKey = groupEntity.getGroupPublicParams();
+        System.out.println("getGroupLogs.groupKey:" + groupKey);
+        try (Jedis jedis = cacheClient.getReadResource()) {
+            byte[] groupByte = jedis.hget(GROUP_REDIS_KEY.getBytes(), groupKey.serialize());
+            Group group = null;
+            try {
+                group = Group.parseFrom(groupByte);
+                System.out.println("getGroupLogs.title:" + group.getTitle().toByteArray().toString());
+                System.out.println("getGroupLogs.avatar:" + group.getAvatar());
+                System.out.println("getGroupLogs.getAccessControl:" + group.getAccessControl());
+                System.out.println("getGroupLogs.members.size:" + group.getMembersList().size());
+                return group;
+            } catch (InvalidProtocolBufferException e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+    @Timed
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
