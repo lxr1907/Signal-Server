@@ -45,6 +45,7 @@ public class GroupController {
     }
 
     public static final String GROUP_REDIS_KEY = "group_";
+    public static final String GROUP_CHANGE_REDIS_KEY = "group_change_";
     public static final String GROUP_ADMIN_REDIS_KEY = "group_admin_";
     public static final String GROUP_MEMBER_REDIS_KEY = "group_member_";
 
@@ -121,23 +122,21 @@ public class GroupController {
     @GET
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    @Path("/logs/{version}")
-    public Group getGroupLogs(@Auth GroupEntity groupEntity, @PathParam("version") int version) {
-        System.out.println("getGroupLogs version:" + version);
+    @Path("/logs/{index}")
+    public GroupChange getGroupLogs(@Auth GroupEntity groupEntity, @PathParam("index") int index) {
+        System.out.println("getGroupLogs index:" + index);
         System.out.println("getGroupLogs:" + groupEntity);
         System.out.println("getGroupLogs:" + groupEntity);
         var groupKey = groupEntity.getGroupPublicParams();
-        System.out.println("getGroupLogs.groupKey:" + groupKey);
+        System.out.println("getGroupLogs.redisKey:" + (GROUP_CHANGE_REDIS_KEY + groupKey.serialize()));
         try (Jedis jedis = cacheClient.getReadResource()) {
-            byte[] groupByte = jedis.hget(GROUP_REDIS_KEY.getBytes(), groupKey.serialize());
-            Group group = null;
+            byte[] groupByte = jedis.lindex((GROUP_CHANGE_REDIS_KEY + groupKey.serialize()).getBytes(), index);
+            GroupChange groupChange = null;
             try {
-                group = Group.parseFrom(groupByte);
-                System.out.println("getGroupLogs.title:" + group.getTitle().toByteArray().toString());
-                System.out.println("getGroupLogs.avatar:" + group.getAvatar());
-                System.out.println("getGroupLogs.getAccessControl:" + group.getAccessControl());
-                System.out.println("getGroupLogs.members.size:" + group.getMembersList().size());
-                return group;
+                groupChange = GroupChange.parseFrom(groupByte);
+                System.out.println("groupChange.getActions:" + groupChange.getActions());
+                System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
+                return groupChange;
             } catch (InvalidProtocolBufferException e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
@@ -148,6 +147,7 @@ public class GroupController {
         }
         return null;
     }
+
     @Timed
     @PATCH
     @Consumes("application/x-protobuf")
@@ -155,9 +155,9 @@ public class GroupController {
     public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions inputActions) throws InvalidProtocolBufferException {
         Group group = getGroup(groupEntity);
         System.out.println("groupChange.actions:" + inputActions);
-        GroupChange.Actions.Builder actionsBuilder=inputActions.toBuilder();
+        GroupChange.Actions.Builder actionsBuilder = inputActions.toBuilder();
         actionsBuilder.setSourceUuid(ByteString.copyFrom(groupEntity.getAuthCredentialPresentation().getUuidCiphertext().serialize()));
-        GroupChange.Actions actions=actionsBuilder.build();
+        GroupChange.Actions actions = actionsBuilder.build();
         NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
         ByteString signature = ByteString.copyFrom(notarySignature.serialize());
         GroupChange.Builder newGroupChange = GroupChange.newBuilder();
@@ -176,8 +176,11 @@ public class GroupController {
         Group.Builder builder = group.toBuilder();
         builder.setTitle(title);
         Group groupNew = builder.build();
+        var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupNew.getPublicKey().toByteArray(), groupNew.toByteArray());
+            System.out.println("getGroupLogs.redisKey:" + (GROUP_CHANGE_REDIS_KEY + groupKey.serialize()));
+            jedis.lpush((GROUP_CHANGE_REDIS_KEY +  groupKey.serialize()).getBytes(), groupChange.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
