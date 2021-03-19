@@ -91,27 +91,27 @@ public class RetryingApnsClient {
 
     @Override
     public void operationComplete(io.netty.util.concurrent.Future<PushNotificationResponse<SimpleApnsPushNotification>> result) {
-      try {
-        PushNotificationResponse<SimpleApnsPushNotification> response = result.get();
-
-        if (response.isAccepted()) {
-          future.set(new ApnResult(ApnResult.Status.SUCCESS, null));
-        } else if ("Unregistered".equals(response.getRejectionReason()) ||
-                   "BadDeviceToken".equals(response.getRejectionReason()))
-        {
-          future.set(new ApnResult(ApnResult.Status.NO_SUCH_USER, response.getRejectionReason()));
-        } else {
-          logger.warn("Got APN failure: " + response.getRejectionReason());
-          future.set(new ApnResult(ApnResult.Status.GENERIC_FAILURE, response.getRejectionReason()));
-        }
-
-      } catch (InterruptedException e) {
-        logger.warn("Interrupted exception", e);
-        future.setException(e);
-      } catch (ExecutionException e) {
-        logger.warn("Execution exception", e.getMessage());
-        future.setException(e.getCause());
-      }
+//      try {
+//        PushNotificationResponse<SimpleApnsPushNotification> response = result.get();
+//
+//        if (response.isAccepted()) {
+//          future.set(new ApnResult(ApnResult.Status.SUCCESS, null));
+//        } else if ("Unregistered".equals(response.getRejectionReason()) ||
+//                   "BadDeviceToken".equals(response.getRejectionReason()))
+//        {
+//          future.set(new ApnResult(ApnResult.Status.NO_SUCH_USER, response.getRejectionReason()));
+//        } else {
+//          logger.warn("Got APN failure: " + response.getRejectionReason());
+//          future.set(new ApnResult(ApnResult.Status.GENERIC_FAILURE, response.getRejectionReason()));
+//        }
+//
+//      } catch (InterruptedException e) {
+//        logger.warn("Interrupted exception", e);
+//        future.setException(e);
+//      } catch (ExecutionException e) {
+//        logger.warn("Execution exception", e.getMessage());
+//        future.setException(e.getCause());
+//      }
     }
   }
 
