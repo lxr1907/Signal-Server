@@ -121,9 +121,12 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions actions) {
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions inputActions) throws InvalidProtocolBufferException {
         Group group = getGroup(groupEntity);
-        System.out.println("groupChange.actions:" + actions);
+        System.out.println("groupChange.actions:" + inputActions);
+        GroupChange.Actions.Builder actionsBuilder=inputActions.toBuilder();
+        actionsBuilder.setSourceUuid(ByteString.copyFrom(groupEntity.getAuthCredentialPresentation().getUuidCiphertext().serialize()));
+        GroupChange.Actions actions=actionsBuilder.build();
         NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
         ByteString signature = ByteString.copyFrom(notarySignature.serialize());
         GroupChange.Builder newGroupChange = GroupChange.newBuilder();
