@@ -109,7 +109,7 @@ public class RetryingApnsClient {
         logger.warn("Interrupted exception", e);
         future.setException(e);
       } catch (ExecutionException e) {
-        logger.warn("Execution exception", e);
+        logger.warn("Execution exception", e.getMessage());
         future.setException(e.getCause());
       }
     }
