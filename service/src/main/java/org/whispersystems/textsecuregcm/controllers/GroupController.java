@@ -132,7 +132,7 @@ public class GroupController {
             byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey).getBytes(), index);
             GroupChange groupChange = null;
             try {
-                if (groupByte.length == 0) {
+                if (groupByte == null || groupByte.length == 0) {
                     return null;
                 }
                 groupChange = GroupChange.parseFrom(groupByte);
