@@ -80,6 +80,7 @@ public class GroupController {
             System.out.println("group.members.presentation:" + m.getPresentation().toString());
             System.out.println("group.members.userid:" + m.getUserId());
             System.out.println("group.members.profileKey:" + m.getProfileKey());
+            System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
         }
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
@@ -106,6 +107,7 @@ public class GroupController {
                 System.out.println("group.avatar:" + group.getAvatar());
                 System.out.println("group.getAccessControl:" + group.getAccessControl());
                 System.out.println("group.members.size:" + group.getMembersList().size());
+                System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
                 return group;
             } catch (InvalidProtocolBufferException e) {
                 System.out.println(e.getMessage());
@@ -155,6 +157,7 @@ public class GroupController {
     public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions inputActions) throws InvalidProtocolBufferException {
         Group group = getGroup(groupEntity);
         System.out.println("groupChange.actions:" + inputActions);
+        System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
         GroupChange.Actions.Builder actionsBuilder = inputActions.toBuilder();
         actionsBuilder.setSourceUuid(ByteString.copyFrom(groupEntity.getAuthCredentialPresentation().getUuidCiphertext().serialize()));
         GroupChange.Actions actions = actionsBuilder.build();
