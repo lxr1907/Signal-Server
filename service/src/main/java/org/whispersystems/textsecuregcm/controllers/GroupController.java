@@ -60,11 +60,6 @@ public class GroupController {
         Group.Builder newGroupBuilder = group.toBuilder();
         int i = 0;
 
-        var changeBuilder= GroupChange.newBuilder();
-        var titleActionsBuilder=GroupChange.Actions.newBuilder();
-        titleActionsBuilder.setModifyTitle(GroupChange.Actions.ModifyTitleAction.newBuilder().setTitle(group.getTitle()).build());
-        changeBuilder.setActions(titleActionsBuilder.build().toByteString());
-        var actionsBuilder=GroupChange.Actions.newBuilder();
 
         for (Member m : group.getMembersList()) {
             ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(m.getPresentation().toByteArray());
@@ -77,8 +72,6 @@ public class GroupController {
             memberList.add(newMember);
             newGroupBuilder.setMembers(i, newMember);
             i++;
-            actionsBuilder.addAddMembers(GroupChange.Actions.AddMemberAction.newBuilder().setAdded(m).build());
-            changeBuilder.setActions(actionsBuilder.build().toByteString());
         }
         Group newGroup = newGroupBuilder.build();
         for (Member m : newGroup.getMembersList()) {
@@ -190,7 +183,7 @@ public class GroupController {
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
-    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions inputActions) throws InvalidProtocolBufferException {
+    public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions inputActions) throws InvalidInputException {
         Group group = getGroup(groupEntity);
         System.out.println("groupChange.actions:" + inputActions);
         System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
@@ -226,7 +219,14 @@ public class GroupController {
             System.out.println("groupChange.addMemberActionsList.size:" + addMemberActionsList.size());
             for (var addMemberAction : addMemberActionsList) {
                 var member = addMemberAction.getAdded();
-                builder.addMembers(member);
+                ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(member.getPresentation().toByteArray());
+                UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
+                ProfileKeyCiphertext profileKeyCiphertext = presentation.getProfileKeyCiphertext();
+                Member newMember = member.toBuilder()
+                    .setUserId(ByteString.copyFrom(uuidCiphertext.serialize()))
+                    .setProfileKey(ByteString.copyFrom(profileKeyCiphertext.serialize()))
+                    .build();
+                builder.addMembers(newMember);
             }
         }
 
@@ -243,15 +243,12 @@ public class GroupController {
             System.out.println("groupChange.deleteMembersActionList.size:" + deleteMembersActionList.size());
             for (var deleteMemberAction : deleteMembersActionList) {
                 var deletedUserId = deleteMemberAction.getDeletedUserId();
-                int index=0;
                for(int i=0;i< builder.getMembersList().size();i++){
                    var member=builder.getMembersList().get(i);
                    if(member.getUserId().equals(deletedUserId)){
-                       index=i;
-                       break;
+                       builder.removeMembers(i);
                    }
                }
-                builder.removeMembers(index);
             }
         }
 
