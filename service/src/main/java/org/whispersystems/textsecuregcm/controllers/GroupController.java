@@ -133,7 +133,7 @@ public class GroupController {
             GroupChange groupChange = null;
             try {
                 if (groupByte == null || groupByte.length == 0) {
-                    return null;
+                    return GroupChange.newBuilder().build();
                 }
                 groupChange = GroupChange.parseFrom(groupByte);
                 System.out.println("getGroupLogs.groupChange.getActions:" + groupChange.getActions());
