@@ -24,6 +24,7 @@ import javax.ws.rs.core.Response;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -49,13 +50,16 @@ public class RemoteConfigController {
   public UserRemoteConfigList getAll(@Auth Account account) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA1");
-
-      return new UserRemoteConfigList(remoteConfigsManager.getAll().stream().map(config -> new UserRemoteConfig(config.getName(),
-                                                                                                                isInBucket(digest, account.getUuid(),
-                                                                                                                           config.getName().getBytes(),
-                                                                                                                           config.getPercentage(),
-                                                                                                                           config.getUuids())))
-                                                          .collect(Collectors.toList()));
+      //UserRemoteConfigList list= new UserRemoteConfigList(remoteConfigsManager.getAll().stream().map(config -> new UserRemoteConfig(config.getName(),
+//          isInBucket(digest, account.getUuid(),
+//              config.getName().getBytes(),
+//              config.getPercentage(),
+//              config.getUuids())))
+//          .collect(Collectors.toList()));
+      var configList = new ArrayList<UserRemoteConfig>();
+      configList.add(new UserRemoteConfig("ios.deleteForEveryone", true));
+      var list = new UserRemoteConfigList(configList);
+      return list;
     } catch (NoSuchAlgorithmException e) {
       throw new AssertionError(e);
     }
