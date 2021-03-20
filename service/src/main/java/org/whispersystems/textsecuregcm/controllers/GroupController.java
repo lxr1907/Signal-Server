@@ -136,8 +136,8 @@ public class GroupController {
                     return null;
                 }
                 groupChange = GroupChange.parseFrom(groupByte);
-                System.out.println("groupChange.getActions:" + groupChange.getActions());
-                System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
+                System.out.println("getGroupLogs.groupChange.getActions:" + groupChange.getActions());
+                System.out.println("getGroupLogs.groupChange.getServerSignature:" + groupChange.getServerSignature());
                 return groupChange;
             } catch (InvalidProtocolBufferException e) {
                 System.out.println(e.getMessage());
@@ -151,7 +151,6 @@ public class GroupController {
     }
 
     private byte[] getGroupLogsKey(GroupPublicParams groupPublicParams) {
-
         return byteMergerAll(GROUP_CHANGE_REDIS_KEY.getBytes(),groupPublicParams.serialize());
     }
     private static byte[] byteMergerAll(byte[]... values) {
