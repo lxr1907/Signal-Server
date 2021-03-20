@@ -156,10 +156,7 @@ public class GroupController {
                     return groupChangesBuilder.build();
                 }
                 groupChanges = GroupChanges.parseFrom(groupChangesByte);
-                while (groupChanges.getGroupChanges(index) != null) {
-                    groupChangesBuilder.addGroupChanges(groupChanges.getGroupChanges(index));
-                    index++;
-                }
+                groupChangesBuilder.addGroupChanges(groupChanges.getGroupChanges(index));
                 return groupChangesBuilder.build();
             } catch (InvalidProtocolBufferException e) {
                 System.out.println(e.getMessage());
