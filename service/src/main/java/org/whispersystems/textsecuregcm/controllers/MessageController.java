@@ -144,7 +144,16 @@ public class MessageController {
 
       for (IncomingMessage incomingMessage : messages.getMessages()) {
         Optional<Device> destinationDevice = destination.get().getDevice(incomingMessage.getDestinationDeviceId());
-
+        System.out.println("message.type:"+incomingMessage.getType());
+        System.out.println("message.body:"+incomingMessage.getBody());
+        System.out.println("message.content:"+incomingMessage.getContent());
+        System.out.println("message.destination:"+incomingMessage.getDestination());
+        System.out.println("message.relay:"+incomingMessage.getRelay());
+        System.out.println("message.getDestinationDeviceId:"+incomingMessage.getDestinationDeviceId());
+        System.out.println("message.getDestinationRegistrationId:"+incomingMessage.getDestinationRegistrationId());
+        System.out.println("message.source.uuid:"+source.get().getUuid());
+        System.out.println("message.destinationName.getUuid:"+destinationName.getUuid());
+        System.out.println("message.destinationName.getNumber:"+destinationName.getNumber());
         if (destinationDevice.isPresent()) {
           sendMessage(source, destination.get(), destinationDevice.get(), messages.getTimestamp(), messages.isOnline(), incomingMessage);
         }
