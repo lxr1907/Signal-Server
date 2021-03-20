@@ -88,9 +88,11 @@ public class GroupController {
             System.out.println("group.members.profileKey:" + m.getProfileKey());
             System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
         }
+       var groupChangesBuilder= GroupChanges.newBuilder();
+        groupChangesBuilder.addGroupChanges(GroupChanges.GroupChangeState.newBuilder().setGroupState(group).build());
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
-            jedis.lpush(getGroupLogsKey(groupKey), changeBuilder.build().toByteArray());
+            jedis.hset(GROUP_CHANGE_REDIS_KEY.getBytes(),groupKey.serialize(), groupChangesBuilder.build().toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -137,35 +139,32 @@ public class GroupController {
         System.out.println("getGroupLogs:" + groupEntity);
         System.out.println("getGroupLogs:" + groupEntity);
         var groupKey = groupEntity.getGroupPublicParams();
-        System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
+        System.out.println("getGroupLogs.redisKey:" + groupKey);
         var groupChangesBuilder=GroupChanges.newBuilder();
         try (Jedis jedis = cacheClient.getReadResource()) {
-            for(int i=0;i<=index;i++) {
-                byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey), index);
-                GroupChange groupChange = null;
-                try {
-                    if (groupByte == null || groupByte.length == 0) {
-                        return groupChangesBuilder.build();
-                    }
-                    groupChange = GroupChange.parseFrom(groupByte);
-                    System.out.println("getGroupLogs.groupChange.getActions:" + groupChange.getActions());
-                    System.out.println("getGroupLogs.groupChange.getServerSignature:" + groupChange.getServerSignature());
-                    groupChangesBuilder.addGroupChanges(GroupChanges.GroupChangeState.newBuilder().setGroupChange(groupChange).build());
-                } catch (InvalidProtocolBufferException e) {
-                    System.out.println(e.getMessage());
-                    e.printStackTrace();
+            byte[] groupChangesByte = jedis.hget(GROUP_CHANGE_REDIS_KEY.getBytes(), groupKey.serialize());
+            GroupChanges groupChanges = null;
+            try {
+                if (groupChangesByte == null || groupChangesByte.length == 0) {
+                    System.out.println("error getGroupLogs.groupChange empty !");
+                    return groupChangesBuilder.build();
                 }
+                groupChanges = GroupChanges.parseFrom(groupChangesByte);
+                return groupChanges;
+            } catch (InvalidProtocolBufferException e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+        System.out.println("error getGroupLogs.groupChange empty !");
         return groupChangesBuilder.build();
     }
-
-    private byte[] getGroupLogsKey(GroupPublicParams groupPublicParams) {
-        return byteMergerAll(GROUP_CHANGE_REDIS_KEY.getBytes(),groupPublicParams.serialize());
-    }
+//    private byte[] getGroupLogsKey(GroupPublicParams groupPublicParams) {
+//        return byteMergerAll(GROUP_CHANGE_REDIS_KEY.getBytes(),groupPublicParams.serialize());
+//    }
     private static byte[] byteMergerAll(byte[]... values) {
         int length_byte = 0;
         for (int i = 0; i < values.length; i++) {
@@ -268,8 +267,22 @@ public class GroupController {
         var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupNew.getPublicKey().toByteArray(), groupNew.toByteArray());
-            System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
-            jedis.lpush(getGroupLogsKey(groupKey), groupChange.toByteArray());
+            byte[] groupChangesByte = jedis.hget(GROUP_CHANGE_REDIS_KEY.getBytes(),groupKey.serialize());
+            GroupChanges groupChanges = null;
+            try {
+                if (groupChangesByte != null && groupChangesByte.length != 0) {
+                    groupChanges = GroupChanges.parseFrom(groupChangesByte);
+                    var groupChangesNew=groupChanges.toBuilder();
+                    groupChangesNew.addGroupChanges(GroupChanges.GroupChangeState.newBuilder()
+                        .setGroupChange(groupChange)
+                        .setGroupState(groupNew)
+                        .build());
+                    jedis.hset(GROUP_CHANGE_REDIS_KEY.getBytes(),groupKey.serialize(),groupChangesNew.build().toByteArray());
+                }
+            } catch (InvalidProtocolBufferException e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
