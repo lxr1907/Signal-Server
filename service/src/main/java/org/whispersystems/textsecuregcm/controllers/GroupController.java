@@ -189,6 +189,18 @@ public class GroupController {
         System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
         GroupChange.Actions.Builder actionsBuilder = inputActions.toBuilder();
         actionsBuilder.setSourceUuid(ByteString.copyFrom(groupEntity.getAuthCredentialPresentation().getUuidCiphertext().serialize()));
+        for(var addMemberBuilder:actionsBuilder.getAddMembersBuilderList()){
+            byte[]presentationByte=addMemberBuilder.getAdded().getPresentation().toByteArray();
+            ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(presentationByte);
+            UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
+            ProfileKeyCiphertext profileKeyCiphertext = presentation.getProfileKeyCiphertext();
+            Member newMember = addMemberBuilder.getAdded().toBuilder()
+                .setUserId(ByteString.copyFrom(uuidCiphertext.serialize()))
+                .setProfileKey(ByteString.copyFrom(profileKeyCiphertext.serialize()))
+                .build();
+            addMemberBuilder.setAdded(newMember).build();
+        }
+
         GroupChange.Actions actions = actionsBuilder.build();
         NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
         ByteString signature = ByteString.copyFrom(notarySignature.serialize());
