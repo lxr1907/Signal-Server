@@ -177,11 +177,54 @@ public class GroupController {
         System.out.println("end groupChange.getChangeEpoch:" + newGroupChange.getChangeEpoch());
         System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
 
-        //实际取出群名称，写入redis
-        ByteString title = actions.getModifyTitle().getTitle();
-        System.out.println("groupChange.getModifyTitle:" + title);
         Group.Builder builder = group.toBuilder();
-        builder.setTitle(title);
+        //取出所有变更项，同步到group对象中，再存入redis。
+        if (actions.getModifyTitle() != null && actions.getModifyTitle().getTitle() != null) {
+            //实际取出群名称，写入redis
+            ByteString title = actions.getModifyTitle().getTitle();
+            System.out.println("groupChange.getModifyTitle:" + title);
+            builder.setTitle(title);
+        }
+
+        var addMemberActionsList = actions.getAddMembersList();
+        if (addMemberActionsList != null && addMemberActionsList.size() != 0) {
+            System.out.println("groupChange.addMemberActionsList.size:" + addMemberActionsList.size());
+            for (var addMemberAction : addMemberActionsList) {
+                var member = addMemberAction.getAdded();
+                builder.addMembers(member);
+            }
+        }
+
+        var peddingMemberActionList=actions.getAddPendingMembersList();
+        if (peddingMemberActionList != null && peddingMemberActionList.size() != 0) {
+            System.out.println("groupChange.peddingMemberActionList.size:" + peddingMemberActionList.size());
+            for (var peddingMemberAction : peddingMemberActionList) {
+                var member = peddingMemberAction.getAdded();
+                builder.addPendingMembers(member);
+            }
+        }
+        var deleteMembersActionList=actions.getDeleteMembersList();
+        if (deleteMembersActionList != null && deleteMembersActionList.size() != 0) {
+            System.out.println("groupChange.deleteMembersActionList.size:" + deleteMembersActionList.size());
+            for (var deleteMemberAction : deleteMembersActionList) {
+                var deletedUserId = deleteMemberAction.getDeletedUserId();
+                int index=0;
+               for(int i=0;i< builder.getMembersList().size();i++){
+                   var member=builder.getMembersList().get(i);
+                   if(member.getUserId().equals(deletedUserId)){
+                       index=i;
+                       break;
+                   }
+               }
+                builder.removeMembers(index);
+            }
+        }
+
+        var modifyAvatar=actions.getModifyAvatar();
+        if(modifyAvatar!=null&&modifyAvatar.getAvatar()!=null){
+            builder.setAvatar(modifyAvatar.getAvatar());
+        }
+
         Group groupNew = builder.build();
         var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getWriteResource()) {
