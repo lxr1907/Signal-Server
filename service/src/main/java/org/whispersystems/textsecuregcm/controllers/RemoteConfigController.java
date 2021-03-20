@@ -58,6 +58,9 @@ public class RemoteConfigController {
 //          .collect(Collectors.toList()));
       var configList = new ArrayList<UserRemoteConfig>();
       configList.add(new UserRemoteConfig("ios.deleteForEveryone", true));
+      configList.add(new UserRemoteConfig("ios.groupsV2CreateGroups", true));
+      configList.add(new UserRemoteConfig("ios.groupsV2GoodCitizen", true));
+      configList.add(new UserRemoteConfig("ios.groupsV2SetCapability", true));
       var list = new UserRemoteConfigList(configList);
       return list;
     } catch (NoSuchAlgorithmException e) {
