@@ -225,6 +225,19 @@ public class GroupController {
             builder.setAvatar(modifyAvatar.getAvatar());
         }
 
+        var modifyMemberRolesList= actions.getModifyMemberRolesList();
+        if(modifyMemberRolesList!=null&&modifyMemberRolesList.size()!=0){
+            for(int i=0;i<modifyMemberRolesList.size();i++){
+                var modifyMember=modifyMemberRolesList.get(i);
+                int finalI = i;
+                builder.getMembersList().forEach(member -> {
+                    if(member.getUserId().equals(modifyMember.getUserId())){
+                        var memberNew=member.toBuilder().setRole(modifyMember.getRole()).build();
+                        builder.setMembers(finalI,memberNew);
+                    }
+                });
+            }
+        }
         Group groupNew = builder.build();
         var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getWriteResource()) {
