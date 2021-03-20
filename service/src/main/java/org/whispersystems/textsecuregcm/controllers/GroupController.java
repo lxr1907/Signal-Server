@@ -283,7 +283,7 @@ public class GroupController {
                     var groupChangesNew=groupChanges.toBuilder();
                     groupChangesNew.addGroupChanges(GroupChanges.GroupChangeState.newBuilder()
                         .setGroupChange(groupChange)
-                        .setGroupState(groupNew)
+                        .setGroupState(group)
                         .build());
                     jedis.hset(GROUP_CHANGE_REDIS_KEY.getBytes(),groupKey.serialize(),groupChangesNew.build().toByteArray());
                 }
