@@ -89,7 +89,11 @@ public class GroupController {
             System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
         }
        var groupChangesBuilder= GroupChanges.newBuilder();
-        groupChangesBuilder.addGroupChanges(GroupChanges.GroupChangeState.newBuilder().setGroupState(group).build());
+        groupChangesBuilder.addGroupChanges(GroupChanges.GroupChangeState.newBuilder()
+            .setGroupState(group)
+            .setGroupChange(GroupChange.newBuilder().setActions(
+                GroupChange.Actions.ModifyTitleAction.newBuilder().setTitle(group.getTitle()).build().toByteString()
+            ).build()).build());
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
             jedis.hset(GROUP_CHANGE_REDIS_KEY.getBytes(),groupKey.serialize(), groupChangesBuilder.build().toByteArray());
