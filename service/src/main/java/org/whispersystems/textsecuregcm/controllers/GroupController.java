@@ -60,11 +60,11 @@ public class GroupController {
         Group.Builder newGroupBuilder = group.toBuilder();
         int i = 0;
 
-//        var changeBuilder= GroupChange.newBuilder();
-//        var titleActionsBuilder=GroupChange.Actions.newBuilder();
-//        titleActionsBuilder.setModifyTitle(GroupChange.Actions.ModifyTitleAction.newBuilder().setTitle(group.getTitle()).build());
-//        changeBuilder.setActions(titleActionsBuilder.build().toByteString());
-//        var actionsBuilder=GroupChange.Actions.newBuilder();
+        var changeBuilder= GroupChange.newBuilder();
+        var titleActionsBuilder=GroupChange.Actions.newBuilder();
+        titleActionsBuilder.setModifyTitle(GroupChange.Actions.ModifyTitleAction.newBuilder().setTitle(group.getTitle()).build());
+        changeBuilder.setActions(titleActionsBuilder.build().toByteString());
+        var actionsBuilder=GroupChange.Actions.newBuilder();
 
         for (Member m : group.getMembersList()) {
             ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(m.getPresentation().toByteArray());
@@ -77,8 +77,8 @@ public class GroupController {
             memberList.add(newMember);
             newGroupBuilder.setMembers(i, newMember);
             i++;
-//            actionsBuilder.addAddMembers(GroupChange.Actions.AddMemberAction.newBuilder().setAdded(m).build());
-//            changeBuilder.setActions(actionsBuilder.build().toByteString());
+            actionsBuilder.addAddMembers(GroupChange.Actions.AddMemberAction.newBuilder().setAdded(m).build());
+            changeBuilder.setActions(actionsBuilder.build().toByteString());
         }
         Group newGroup = newGroupBuilder.build();
         for (Member m : newGroup.getMembersList()) {
@@ -90,7 +90,7 @@ public class GroupController {
         }
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
-//            jedis.lpush(getGroupLogsKey(groupKey), changeBuilder.build().toByteArray());
+            jedis.lpush(getGroupLogsKey(groupKey), changeBuilder.build().toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -132,32 +132,35 @@ public class GroupController {
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     @Path("/logs/{index}")
-    public GroupChange getGroupLogs(@Auth GroupEntity groupEntity, @PathParam("index") int index) {
+    public GroupChanges getGroupLogs(@Auth GroupEntity groupEntity, @PathParam("index") int index) {
         System.out.println("getGroupLogs index:" + index);
         System.out.println("getGroupLogs:" + groupEntity);
         System.out.println("getGroupLogs:" + groupEntity);
         var groupKey = groupEntity.getGroupPublicParams();
         System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
+        var groupChangesBuilder=GroupChanges.newBuilder();
         try (Jedis jedis = cacheClient.getReadResource()) {
-            byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey), index);
-            GroupChange groupChange = null;
-            try {
-                if (groupByte == null || groupByte.length == 0) {
-                    return GroupChange.newBuilder().build();
+            for(int i=0;i<index;i++) {
+                byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey), index);
+                GroupChange groupChange = null;
+                try {
+                    if (groupByte == null || groupByte.length == 0) {
+                        return groupChangesBuilder.build();
+                    }
+                    groupChange = GroupChange.parseFrom(groupByte);
+                    System.out.println("getGroupLogs.groupChange.getActions:" + groupChange.getActions());
+                    System.out.println("getGroupLogs.groupChange.getServerSignature:" + groupChange.getServerSignature());
+                    groupChangesBuilder.addGroupChanges(GroupChanges.GroupChangeState.newBuilder().setGroupChange(groupChange).build());
+                } catch (InvalidProtocolBufferException e) {
+                    System.out.println(e.getMessage());
+                    e.printStackTrace();
                 }
-                groupChange = GroupChange.parseFrom(groupByte);
-                System.out.println("getGroupLogs.groupChange.getActions:" + groupChange.getActions());
-                System.out.println("getGroupLogs.groupChange.getServerSignature:" + groupChange.getServerSignature());
-                return groupChange;
-            } catch (InvalidProtocolBufferException e) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        return GroupChange.newBuilder().build();
+        return groupChangesBuilder.build();
     }
 
     private byte[] getGroupLogsKey(GroupPublicParams groupPublicParams) {
