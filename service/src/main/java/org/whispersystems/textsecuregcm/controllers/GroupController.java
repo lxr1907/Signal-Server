@@ -201,7 +201,7 @@ public class GroupController {
         GroupChange.Builder newGroupChange = GroupChange.newBuilder();
         GroupChange groupChange = newGroupChange
                 .setActions(ByteString.copyFrom(actions.toByteArray()))
-                .setChangeEpoch(Util.currentDaysSinceEpoch())
+                .setChangeEpoch(0)
                 .setServerSignature(signature).build();
 
         System.out.println("end groupChange.getActions:" + newGroupChange.getActions());
