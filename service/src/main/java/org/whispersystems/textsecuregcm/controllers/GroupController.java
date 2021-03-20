@@ -59,6 +59,13 @@ public class GroupController {
 
         Group.Builder newGroupBuilder = group.toBuilder();
         int i = 0;
+
+//        var changeBuilder= GroupChange.newBuilder();
+//        var titleActionsBuilder=GroupChange.Actions.newBuilder();
+//        titleActionsBuilder.setModifyTitle(GroupChange.Actions.ModifyTitleAction.newBuilder().setTitle(group.getTitle()).build());
+//        changeBuilder.setActions(titleActionsBuilder.build().toByteString());
+//        var actionsBuilder=GroupChange.Actions.newBuilder();
+
         for (Member m : group.getMembersList()) {
             ProfileKeyCredentialPresentation presentation = new ProfileKeyCredentialPresentation(m.getPresentation().toByteArray());
             UuidCiphertext uuidCiphertext = presentation.getUuidCiphertext();
@@ -70,6 +77,8 @@ public class GroupController {
             memberList.add(newMember);
             newGroupBuilder.setMembers(i, newMember);
             i++;
+//            actionsBuilder.addAddMembers(GroupChange.Actions.AddMemberAction.newBuilder().setAdded(m).build());
+//            changeBuilder.setActions(actionsBuilder.build().toByteString());
         }
         Group newGroup = newGroupBuilder.build();
         for (Member m : newGroup.getMembersList()) {
@@ -81,6 +90,7 @@ public class GroupController {
         }
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
+//            jedis.lpush(getGroupLogsKey(groupKey), changeBuilder.build().toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -147,7 +157,7 @@ public class GroupController {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        return null;
+        return GroupChange.newBuilder().build();
     }
 
     private byte[] getGroupLogsKey(GroupPublicParams groupPublicParams) {
