@@ -210,7 +210,8 @@ public class GroupController {
 
         Group.Builder builder = group.toBuilder();
         //取出所有变更项，同步到group对象中，再存入redis。
-        if (actions.getModifyTitle() != null && actions.getModifyTitle().getTitle() != null) {
+        if (actions.getModifyTitle() != null && actions.getModifyTitle().getTitle() != null
+            && actions.getModifyTitle().getTitle().size()!=0 ) {
             //实际取出群名称，写入redis
             ByteString title = actions.getModifyTitle().getTitle();
             System.out.println("groupChange.getModifyTitle:" + title);
@@ -257,20 +258,21 @@ public class GroupController {
         }
 
         var modifyMemberRolesList= actions.getModifyMemberRolesList();
-        if(modifyMemberRolesList!=null&&modifyMemberRolesList.size()!=0){
-            for(int i=0;i<modifyMemberRolesList.size();i++){
-                var modifyMember=modifyMemberRolesList.get(i);
-                int finalI = i;
-                builder.getMembersList().forEach(member -> {
-                    if(member.getUserId().equals(modifyMember.getUserId())){
-                        var memberNew=member.toBuilder().setRole(modifyMember.getRole()).build();
-                        builder.setMembers(finalI,memberNew);
+        if (modifyMemberRolesList != null && modifyMemberRolesList.size() != 0) {
+            modifyMemberRolesList.forEach(modifyMember -> {
+                for (int i = 0; i < builder.getMembersList().size(); i++) {
+                    var member = builder.getMembersList().get(i);
+                    if (member.getUserId().equals(modifyMember.getUserId())) {
+                        var memberNew = member.toBuilder().setRole(modifyMember.getRole()).build();
+                        builder.setMembers(i, memberNew);
                     }
-                });
-            }
+                }
+            });
         }
         Group groupNew = builder.build();
         var groupKey = groupEntity.getGroupPublicParams();
+
+        //保存同步到redis
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupNew.getPublicKey().toByteArray(), groupNew.toByteArray());
             byte[] groupChangesByte = jedis.hget(GROUP_CHANGE_REDIS_KEY.getBytes(),groupKey.serialize());
