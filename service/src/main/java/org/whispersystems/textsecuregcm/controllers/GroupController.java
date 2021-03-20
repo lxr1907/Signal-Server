@@ -90,7 +90,7 @@ public class GroupController {
         }
        var groupChangesBuilder= GroupChanges.newBuilder();
         groupChangesBuilder.addGroupChanges(GroupChanges.GroupChangeState.newBuilder()
-            .setGroupState(group)
+            .setGroupState(newGroup)
             .setGroupChange(GroupChange.newBuilder().setActions(
                 GroupChange.Actions.ModifyTitleAction.newBuilder().setTitle(group.getTitle()).build().toByteString()
             ).build()).build());
