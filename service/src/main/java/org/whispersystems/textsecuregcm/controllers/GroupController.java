@@ -210,6 +210,8 @@ public class GroupController {
         System.out.println("end groupChange.getServerSignature:" + newGroupChange.getServerSignature());
 
         Group.Builder builder = group.toBuilder();
+        //版本号加一
+        builder.setRevision(group.getRevision()+1);
         //取出所有变更项，同步到group对象中，再存入redis。
         if (actions.getModifyTitle() != null && actions.getModifyTitle().getTitle() != null
             && actions.getModifyTitle().getTitle().size()!=0 ) {
