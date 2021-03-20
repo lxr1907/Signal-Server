@@ -151,7 +151,7 @@ public class MessageController {
         System.out.println("message.relay:"+incomingMessage.getRelay());
         System.out.println("message.getDestinationDeviceId:"+incomingMessage.getDestinationDeviceId());
         System.out.println("message.getDestinationRegistrationId:"+incomingMessage.getDestinationRegistrationId());
-        System.out.println("message.source.uuid:"+source.get());
+        System.out.println("message.source:"+source);
         System.out.println("message.destinationName.getUuid:"+destinationName.getUuid());
         System.out.println("message.destinationName.getNumber:"+destinationName.getNumber());
         if (destinationDevice.isPresent()) {
