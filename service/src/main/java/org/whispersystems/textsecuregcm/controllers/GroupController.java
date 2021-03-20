@@ -7,10 +7,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.dropwizard.auth.Auth;
 import org.signal.zkgroup.*;
 import org.signal.zkgroup.auth.AuthCredentialPresentation;
-import org.signal.zkgroup.groups.ClientZkGroupCipher;
-import org.signal.zkgroup.groups.GroupSecretParams;
-import org.signal.zkgroup.groups.ProfileKeyCiphertext;
-import org.signal.zkgroup.groups.UuidCiphertext;
+import org.signal.zkgroup.groups.*;
 import org.signal.zkgroup.profiles.ProfileKeyCredentialPresentation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +42,7 @@ public class GroupController {
     }
 
     public static final String GROUP_REDIS_KEY = "group_";
+    public static final String GROUP_CHANGE_REDIS_KEY = "group_change_";
     public static final String GROUP_ADMIN_REDIS_KEY = "group_admin_";
     public static final String GROUP_MEMBER_REDIS_KEY = "group_member_";
 
@@ -79,6 +77,7 @@ public class GroupController {
             System.out.println("group.members.presentation:" + m.getPresentation().toString());
             System.out.println("group.members.userid:" + m.getUserId());
             System.out.println("group.members.profileKey:" + m.getProfileKey());
+            System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
         }
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupKey.serialize(), newGroup.toByteArray());
@@ -105,6 +104,7 @@ public class GroupController {
                 System.out.println("group.avatar:" + group.getAvatar());
                 System.out.println("group.getAccessControl:" + group.getAccessControl());
                 System.out.println("group.members.size:" + group.getMembersList().size());
+                System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
                 return group;
             } catch (InvalidProtocolBufferException e) {
                 System.out.println(e.getMessage());
@@ -118,15 +118,53 @@ public class GroupController {
     }
 
     @Timed
+    @GET
+    @Consumes("application/x-protobuf")
+    @Produces("application/x-protobuf")
+    @Path("/logs/{index}")
+    public GroupChange getGroupLogs(@Auth GroupEntity groupEntity, @PathParam("index") int index) {
+        System.out.println("getGroupLogs index:" + index);
+        System.out.println("getGroupLogs:" + groupEntity);
+        System.out.println("getGroupLogs:" + groupEntity);
+        var groupKey = groupEntity.getGroupPublicParams();
+        System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
+        try (Jedis jedis = cacheClient.getReadResource()) {
+            byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey).getBytes(), index);
+            GroupChange groupChange = null;
+            try {
+                if (groupByte == null || groupByte.length == 0) {
+                    return null;
+                }
+                groupChange = GroupChange.parseFrom(groupByte);
+                System.out.println("groupChange.getActions:" + groupChange.getActions());
+                System.out.println("groupChange.getServerSignature:" + groupChange.getServerSignature());
+                return groupChange;
+            } catch (InvalidProtocolBufferException e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String getGroupLogsKey(GroupPublicParams groupPublicParams) {
+        return GROUP_CHANGE_REDIS_KEY + new String(groupPublicParams.serialize());
+    }
+
+    @Timed
     @PATCH
     @Consumes("application/x-protobuf")
     @Produces("application/x-protobuf")
     public GroupChange patchGroup(@Auth GroupEntity groupEntity, GroupChange.Actions inputActions) throws InvalidProtocolBufferException {
         Group group = getGroup(groupEntity);
         System.out.println("groupChange.actions:" + inputActions);
-        GroupChange.Actions.Builder actionsBuilder=inputActions.toBuilder();
+        System.out.println("group.getDisappearingMessagesTimer:" + group.getDisappearingMessagesTimer());
+        GroupChange.Actions.Builder actionsBuilder = inputActions.toBuilder();
         actionsBuilder.setSourceUuid(ByteString.copyFrom(groupEntity.getAuthCredentialPresentation().getUuidCiphertext().serialize()));
-        GroupChange.Actions actions=actionsBuilder.build();
+        GroupChange.Actions actions = actionsBuilder.build();
         NotarySignature notarySignature = serverSecretParams.sign(actions.toByteArray());
         ByteString signature = ByteString.copyFrom(notarySignature.serialize());
         GroupChange.Builder newGroupChange = GroupChange.newBuilder();
@@ -145,8 +183,11 @@ public class GroupController {
         Group.Builder builder = group.toBuilder();
         builder.setTitle(title);
         Group groupNew = builder.build();
+        var groupKey = groupEntity.getGroupPublicParams();
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupNew.getPublicKey().toByteArray(), groupNew.toByteArray());
+            System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
+            jedis.lpush(getGroupLogsKey(groupKey).getBytes(), groupChange.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
