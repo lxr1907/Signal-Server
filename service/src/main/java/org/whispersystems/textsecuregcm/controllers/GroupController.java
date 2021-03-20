@@ -229,7 +229,10 @@ public class GroupController {
             System.out.println("groupChange.getModifyTitle:" + title);
             builder.setTitle(title);
         }
-
+        var modifyDisappearingMessagesTimer = actions.getModifyDisappearingMessagesTimer();
+        if (modifyDisappearingMessagesTimer != null) {
+            builder.setDisappearingMessagesTimer(modifyDisappearingMessagesTimer.getTimer());
+        }
         var addMemberActionsList = actions.getAddMembersList();
         if (addMemberActionsList != null && addMemberActionsList.size() != 0) {
             System.out.println("groupChange.addMemberActionsList.size:" + addMemberActionsList.size());
