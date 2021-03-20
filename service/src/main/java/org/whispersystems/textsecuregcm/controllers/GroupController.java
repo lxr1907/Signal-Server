@@ -129,7 +129,7 @@ public class GroupController {
         var groupKey = groupEntity.getGroupPublicParams();
         System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
         try (Jedis jedis = cacheClient.getReadResource()) {
-            byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey).getBytes(), index);
+            byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey), index);
             GroupChange groupChange = null;
             try {
                 if (groupByte == null || groupByte.length == 0) {
@@ -150,10 +150,24 @@ public class GroupController {
         return null;
     }
 
-    private String getGroupLogsKey(GroupPublicParams groupPublicParams) {
-        return GROUP_CHANGE_REDIS_KEY + new String(groupPublicParams.serialize());
-    }
+    private byte[] getGroupLogsKey(GroupPublicParams groupPublicParams) {
 
+        return byteMergerAll(GROUP_CHANGE_REDIS_KEY.getBytes(),groupPublicParams.serialize());
+    }
+    private static byte[] byteMergerAll(byte[]... values) {
+        int length_byte = 0;
+        for (int i = 0; i < values.length; i++) {
+            length_byte += values[i].length;
+        }
+        byte[] all_byte = new byte[length_byte];
+        int countLength = 0;
+        for (int i = 0; i < values.length; i++) {
+            byte[] b = values[i];
+            System.arraycopy(b, 0, all_byte, countLength, b.length);
+            countLength += b.length;
+        }
+        return all_byte;
+    }
     @Timed
     @PATCH
     @Consumes("application/x-protobuf")
@@ -243,7 +257,7 @@ public class GroupController {
         try (Jedis jedis = cacheClient.getWriteResource()) {
             jedis.hset(GROUP_REDIS_KEY.getBytes(), groupNew.getPublicKey().toByteArray(), groupNew.toByteArray());
             System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
-            jedis.lpush(getGroupLogsKey(groupKey).getBytes(), groupChange.toByteArray());
+            jedis.lpush(getGroupLogsKey(groupKey), groupChange.toByteArray());
         } catch (Exception e) {
             e.printStackTrace();
         }
