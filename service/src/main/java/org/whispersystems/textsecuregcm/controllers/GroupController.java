@@ -140,7 +140,7 @@ public class GroupController {
         System.out.println("getGroupLogs.redisKey:" + getGroupLogsKey(groupKey));
         var groupChangesBuilder=GroupChanges.newBuilder();
         try (Jedis jedis = cacheClient.getReadResource()) {
-            for(int i=0;i<index;i++) {
+            for(int i=0;i<=index;i++) {
                 byte[] groupByte = jedis.lindex(getGroupLogsKey(groupKey), index);
                 GroupChange groupChange = null;
                 try {
