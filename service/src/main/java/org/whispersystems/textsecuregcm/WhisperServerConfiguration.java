@@ -17,6 +17,7 @@
 package org.whispersystems.textsecuregcm;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.db.DataSourceFactory;
 import org.whispersystems.textsecuregcm.configuration.*;
 import org.whispersystems.websocket.configuration.WebSocketConfiguration;
 
@@ -32,6 +33,14 @@ import io.dropwizard.client.JerseyClientConfiguration;
 
 /** @noinspection MismatchedQueryAndUpdateOfCollection, WeakerAccess */
 public class WhisperServerConfiguration extends Configuration {
+  @Valid
+  @NotNull
+  private DataSourceFactory dataSourceFactory = new DataSourceFactory();
+
+  @JsonProperty("database")
+  public DataSourceFactory getDataSourceFactory() {
+    return this.dataSourceFactory;
+  }
 
   @NotNull
   @Valid

@@ -29,6 +29,7 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.loginbox.dropwizard.mybatis.MybatisBundle;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthFilter;
 import io.dropwizard.auth.PolymorphicAuthDynamicFeature;
@@ -106,9 +107,16 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
   static {
     Security.addProvider(new BouncyCastleProvider());
   }
-
+  private final MybatisBundle<WhisperServerConfiguration> mybatisBundle
+          = new MybatisBundle<WhisperServerConfiguration>("org.whispersystems.textsecuregcm") {
+    @Override
+    public DataSourceFactory getDataSourceFactory(WhisperServerConfiguration configuration) {
+      return configuration.getDataSourceFactory();
+    }
+  };
   @Override
   public void initialize(Bootstrap<WhisperServerConfiguration> bootstrap) {
+    bootstrap.addBundle(mybatisBundle);
     //protobuf支持
     bootstrap.addBundle(new ProtobufBundle());
     bootstrap.addCommand(new VacuumCommand());
