@@ -7,6 +7,7 @@ import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.TransactionFactory;
 import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
 import org.apache.ibatis.type.TypeHandlerRegistry;
+import org.whispersystems.textsecuregcm.mybatis.mapper.AccountCoinBalanceMapper;
 
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
@@ -132,7 +133,7 @@ public abstract class AbstractMybatisBundle {
     }
 
     private void registerOwnMappers(Configuration configuration) {
-       // configuration.addMapper(Ping.class);
+       configuration.addMappers("org.whispersystems.textsecuregcm.mybatis.mapper");
     }
 
     /* @SafeVarargs would be appropriate, but it's not permitted on private methods until Java 9. */
