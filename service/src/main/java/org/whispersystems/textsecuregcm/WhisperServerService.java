@@ -108,7 +108,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private final MybatisBundle<WhisperServerConfiguration> mybatisBundle = new MybatisBundleImpl("org.whispersystems.textsecuregcm");
+    private final MybatisBundleImpl mybatisBundle = new MybatisBundleImpl("org.whispersystems.textsecuregcm");
 
     @Override
     public void initialize(Bootstrap<WhisperServerConfiguration> bootstrap) {
