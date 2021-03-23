@@ -132,7 +132,7 @@ public abstract class AbstractMybatisBundle {
     }
 
     private void registerOwnMappers(Configuration configuration) {
-        configuration.addMapper(Ping.class);
+       // configuration.addMapper(Ping.class);
     }
 
     /* @SafeVarargs would be appropriate, but it's not permitted on private methods until Java 9. */
