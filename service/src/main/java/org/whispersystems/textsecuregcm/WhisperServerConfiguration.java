@@ -37,7 +37,7 @@ public class WhisperServerConfiguration extends Configuration {
   @NotNull
   private DataSourceFactory dataSourceFactory = new DataSourceFactory();
 
-  @JsonProperty("database")
+  @JsonProperty("accountsDatabase")
   public DataSourceFactory getDataSourceFactory() {
     return this.dataSourceFactory;
   }
