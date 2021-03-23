@@ -133,7 +133,7 @@ public abstract class AbstractMybatisBundle {
     }
 
     private void registerOwnMappers(Configuration configuration) {
-       configuration.addMappers("org.whispersystems.textsecuregcm.mybatis.mapper");
+       //configuration.addMappers("org.whispersystems.textsecuregcm.mybatis.mapper");
     }
 
     /* @SafeVarargs would be appropriate, but it's not permitted on private methods until Java 9. */
