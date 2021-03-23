@@ -35,7 +35,7 @@ import io.dropwizard.client.JerseyClientConfiguration;
 public class WhisperServerConfiguration extends Configuration {
   @Valid
   @NotNull
-  @JsonProperty("accountsDatabase")
+  @JsonProperty("dataSourceFactory")
   private DataSourceFactory dataSourceFactory = new DataSourceFactory();
 
   public DataSourceFactory getDataSourceFactory() {

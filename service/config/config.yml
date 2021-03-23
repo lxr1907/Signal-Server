@@ -159,6 +159,12 @@ accountsDatabase: # Postgresql database configuration
   password: srh;MG#sV3S;M9!
   url: jdbc:postgresql://127.0.0.1:5432/accountsdb
 
+dataSourceFactory: # Postgresql database configuration
+  driverClass: org.postgresql.Driver
+  user: postgres
+  password: srh;MG#sV3S;M9!
+  url: jdbc:postgresql://127.0.0.1:5432/accountsdb
+
 apn: # Apple Push Notifications configuration
   bundleId: 1
   pushCertificate: |
