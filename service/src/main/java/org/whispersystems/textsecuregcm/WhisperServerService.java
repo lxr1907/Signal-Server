@@ -29,7 +29,6 @@ import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.loginbox.dropwizard.mybatis.MybatisBundle;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthFilter;
 import io.dropwizard.auth.PolymorphicAuthDynamicFeature;
@@ -58,19 +57,10 @@ import org.whispersystems.textsecuregcm.mappers.DeviceLimitExceededExceptionMapp
 import org.whispersystems.textsecuregcm.mappers.IOExceptionMapper;
 import org.whispersystems.textsecuregcm.mappers.InvalidWebsocketAddressExceptionMapper;
 import org.whispersystems.textsecuregcm.mappers.RateLimitExceededExceptionMapper;
-import org.whispersystems.textsecuregcm.metrics.CpuUsageGauge;
-import org.whispersystems.textsecuregcm.metrics.FileDescriptorGauge;
-import org.whispersystems.textsecuregcm.metrics.FreeMemoryGauge;
-import org.whispersystems.textsecuregcm.metrics.NetworkReceivedGauge;
-import org.whispersystems.textsecuregcm.metrics.NetworkSentGauge;
+import org.whispersystems.textsecuregcm.metrics.*;
 import org.whispersystems.textsecuregcm.providers.RedisClientFactory;
 import org.whispersystems.textsecuregcm.providers.RedisHealthCheck;
-import org.whispersystems.textsecuregcm.push.APNSender;
-import org.whispersystems.textsecuregcm.push.ApnFallbackManager;
-import org.whispersystems.textsecuregcm.push.GCMSender;
-import org.whispersystems.textsecuregcm.push.PushSender;
-import org.whispersystems.textsecuregcm.push.ReceiptSender;
-import org.whispersystems.textsecuregcm.push.WebsocketSender;
+import org.whispersystems.textsecuregcm.push.*;
 import org.whispersystems.textsecuregcm.recaptcha.RecaptchaClient;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.s3.PolicySigner;
@@ -108,7 +98,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         Security.addProvider(new BouncyCastleProvider());
     }
 
-    private final MybatisBundleImpl mybatisBundle = new MybatisBundleImpl("org.whispersystems.textsecuregcm");
+    private final MybatisBundleImpl mybatisBundle = new MybatisBundleImpl("org.whispersystems.textsecuregcm.mybatis.mapper");
 
     @Override
     public void initialize(Bootstrap<WhisperServerConfiguration> bootstrap) {

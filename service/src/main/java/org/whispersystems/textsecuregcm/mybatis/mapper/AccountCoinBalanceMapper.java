@@ -1,4 +1,4 @@
-package org.whispersystems.textsecuregcm.mappers;
+package org.whispersystems.textsecuregcm.mybatis.mapper;
 
 import org.apache.ibatis.annotations.Param;
 import org.whispersystems.textsecuregcm.storage.AccountCoinBalance;
