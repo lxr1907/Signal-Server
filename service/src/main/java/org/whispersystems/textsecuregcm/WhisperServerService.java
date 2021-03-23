@@ -361,6 +361,9 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
                         config.getVoiceVerificationConfiguration().getLocales()));
         //增加群组功能
         GroupController group = new GroupController(cacheClient, zkSecretParams, serverPublicParams);
+
+        //用户币账户功能
+        AccountCoinController coinController=new AccountCoinController(cacheClient);
         environment.jersey().register(new SecureStorageController(storageCredentialsGenerator));
         environment.jersey().register(new SecureBackupController(backupCredentialsGenerator));
         environment.jersey().register(attachmentControllerV1);
@@ -369,6 +372,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         environment.jersey().register(keysController);
         environment.jersey().register(messageController);
         environment.jersey().register(group);
+        environment.jersey().register(coinController);
         environment.jersey().register(profileController);
         environment.jersey().register(stickerController);
         environment.jersey().register(remoteConfigController);

@@ -17,7 +17,7 @@ import javax.ws.rs.core.MediaType;
 /**
  * lxr 20210323
  */
-@Path("/v1/accounts/coin")
+@Path("/v1/coin")
 public class AccountCoinController {
 
     private final Logger logger = LoggerFactory.getLogger(AccountCoinController.class);
