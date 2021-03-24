@@ -6,6 +6,7 @@ import io.dropwizard.auth.Auth;
 import org.apache.ibatis.session.SqlSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.whispersystems.textsecuregcm.mybatis.entity.BaseModel;
 import org.whispersystems.textsecuregcm.mybatis.mapper.AccountCoinBalanceMapper;
 import org.whispersystems.textsecuregcm.redis.ReplicatedJedisPool;
 import org.whispersystems.textsecuregcm.storage.Account;
@@ -64,6 +65,21 @@ public class AccountCoinController {
             users.insertBase(map);
         }
         ret = users.findByUUid(uuid);
+        return ret;
+    }
+
+    @Timed
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/coinList")
+    public Map getCoinList(@Context SqlSession session) {
+        AccountCoinBalanceMapper users = session.getMapper(AccountCoinBalanceMapper.class);
+        Map<String, String> map = new HashMap<>();
+        map.put("tableName", "coin_manage");
+        BaseModel baseModel = new BaseModel();
+        baseModel.setPageNo(1);
+        baseModel.setPageSize(100);
+        Map ret = users.selectBaseList(map, baseModel);
         return ret;
     }
 

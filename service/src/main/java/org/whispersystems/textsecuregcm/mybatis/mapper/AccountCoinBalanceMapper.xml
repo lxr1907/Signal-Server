@@ -10,6 +10,36 @@
         where uuid = #{uuid}
     ]]>
     </select>
+
+    <!--根据实体参数查询 -->
+    <select id="selectBaseList" resultType="java.util.HashMap">
+        select
+        *
+        from ${map.tableName}
+        where 1=1
+        <foreach collection="map" index="key" item="value">
+            <if
+                    test="key != 'tableName' and key != 'pageSize' and key != 'pageNo' ">
+                and  ${key} =#{value}
+            </if>
+        </foreach>
+        limit #{baseModel.pageSize}  OFFSET #{baseModel.fromRec}
+    </select>
+
+    <!--根据实体参数查询个数 -->
+    <select id="selectBaseCount" resultType="java.lang.Integer">
+        select
+        count(1)
+        from ${map.tableName}
+        where 1=1
+        <foreach collection="map" index="key" item="value">
+            <if
+                    test="key != 'tableName' and key != 'pageSize' and key != 'pageNo' ">
+                and ${key} = #{value}
+            </if>
+        </foreach>
+    </select>
+
     <insert id="insertBase" parameterType="java.util.HashMap">
         insert into ${map.tableName}
         (
