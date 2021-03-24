@@ -16,6 +16,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -72,14 +73,14 @@ public class AccountCoinController {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/coinList")
-    public Map getCoinList(@Context SqlSession session) {
+    public List<Map> getCoinList(@Context SqlSession session) {
         AccountCoinBalanceMapper users = session.getMapper(AccountCoinBalanceMapper.class);
         Map<String, String> map = new HashMap<>();
         map.put("tableName", "coin_manage");
         BaseModel baseModel = new BaseModel();
         baseModel.setPageNo(1);
         baseModel.setPageSize(100);
-        Map ret = users.selectBaseList(map, baseModel);
+        List<Map> ret = users.selectBaseList(map, baseModel);
         return ret;
     }
 

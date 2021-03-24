@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.Param;
 import org.whispersystems.textsecuregcm.mybatis.entity.BaseModel;
 import org.whispersystems.textsecuregcm.storage.AccountCoinBalance;
 
+import java.util.List;
 import java.util.Map;
 
 public interface AccountCoinBalanceMapper {
@@ -13,7 +14,7 @@ public interface AccountCoinBalanceMapper {
 
     void updateBaseByPrimaryKey(@Param("map") Map map);
 
-    Map selectBaseList(@Param("map") Map map,@Param("baseModel") BaseModel baseModel);
+    List<Map> selectBaseList(@Param("map") Map map, @Param("baseModel") BaseModel baseModel);
 
     int selectBaseCount(@Param("map") Map map);
 }
