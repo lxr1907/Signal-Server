@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class AccountCoinBalance {
 
   @JsonIgnore
-  private UUID uuid;
+  private String uuid;
 
   @JsonProperty
   private String coin_name;
@@ -52,11 +52,11 @@ public class AccountCoinBalance {
   @JsonProperty
   private String confirming_balance;
 
-  public UUID getUuid() {
+  public String getUuid() {
     return uuid;
   }
 
-  public void setUuid(UUID uuid) {
+  public void setUuid(String uuid) {
     this.uuid = uuid;
   }
 
