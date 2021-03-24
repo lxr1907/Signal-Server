@@ -10,5 +10,35 @@
         where uuid = #{uuid}
     ]]>
     </select>
-
+    <insert id="insertBase" parameterType="java.util.HashMap">
+        insert into ${map.tableName}
+        (
+        <foreach collection="map" index="key" item="value"
+                 separator=",">
+            <if test="key != 'tableName' ">
+                ${key}
+            </if>
+        </foreach>
+        )
+        values (
+        <foreach collection="map" index="key" item="value"
+                 separator=",">
+            <if test="key != 'tableName' ">
+                #{value}
+            </if>
+        </foreach>
+        )
+    </insert>
+    <update id="updateBaseByPrimaryKey">
+        update ${map.tableName}
+        <set>
+            <foreach collection="map" index="key" item="value"
+                     separator=",">
+                <if test="key != 'tableName' ">
+                    ${key}= #{value}
+                </if>
+            </foreach>
+        </set>
+        where uuid = #{map.uuid}
+    </update>
 </mapper>
