@@ -364,6 +364,8 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
 
         //用户币账户功能
         AccountCoinController coinController=new AccountCoinController(cacheClient);
+        //整合btcpay
+        BTCpayController btCpayController=new BTCpayController();
         environment.jersey().register(new SecureStorageController(storageCredentialsGenerator));
         environment.jersey().register(new SecureBackupController(backupCredentialsGenerator));
         environment.jersey().register(attachmentControllerV1);
@@ -373,6 +375,7 @@ public class WhisperServerService extends Application<WhisperServerConfiguration
         environment.jersey().register(messageController);
         environment.jersey().register(group);
         environment.jersey().register(coinController);
+        environment.jersey().register(btCpayController);
         environment.jersey().register(profileController);
         environment.jersey().register(stickerController);
         environment.jersey().register(remoteConfigController);
