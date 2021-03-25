@@ -2,7 +2,6 @@ package org.whispersystems.textsecuregcm.controllers;
 
 import com.alibaba.fastjson.JSON;
 import io.dropwizard.auth.Auth;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.apache.ibatis.session.SqlSession;
 import org.whispersystems.textsecuregcm.mybatis.entity.BaseModel;
 import org.whispersystems.textsecuregcm.mybatis.entity.ResponseEntity;
@@ -44,7 +43,7 @@ public class BTCpayController {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public ResponseEntity createInvoice(@PathParam(value = "storeId") String storeId,
-                                        @Auth Account account, @Context SqlSession session, @RequestBody Map<String, Object> body) {
+                                        @Auth Account account, @Context SqlSession session, Map<String, Object> body) {
         String uuid = account.getUuid().toString();
         //生成订单号
         String orderid = UUID.randomUUID().toString();
