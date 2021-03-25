@@ -8,11 +8,9 @@ import org.whispersystems.textsecuregcm.mybatis.mapper.AccountCoinBalanceMapper;
 import org.whispersystems.textsecuregcm.storage.Account;
 import org.whispersystems.textsecuregcm.util.HttpsUtils;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,15 +27,17 @@ public class BTCpayController {
 
     @GET
     @Path("/stores")
-    public Map stores() {
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Map> stores() {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(TOKEN, TOKEN_VALUE);
         var ret = HttpsUtils.Get(BTCPAY_URL + GET_STORE, headers);
-        return JSON.parseObject(ret,Map.class);
+        return JSON.parseArray(ret,Map.class);
     }
 
     @POST
     @Path("/stores/{storeId}/invoices")
+    @Produces(MediaType.APPLICATION_JSON)
     public Map<String, String> createInvoice(@PathParam(value = "storeId") String storeId, @Auth Account account, @Context SqlSession session) {
         String uuid = account.getUuid().toString();
         String orderid = UUID.randomUUID().toString();
@@ -57,6 +57,7 @@ public class BTCpayController {
 
     @GET
     @Path("/invoices/{invoiceId}")
+    @Produces(MediaType.APPLICATION_JSON)
     public List<Map> getInvoice(@PathParam(value = "invoiceId") String invoiceId, @Auth Account account, @Context SqlSession session) {
         String uuid = account.getUuid().toString();
         AccountCoinBalanceMapper mapper = session.getMapper(AccountCoinBalanceMapper.class);
