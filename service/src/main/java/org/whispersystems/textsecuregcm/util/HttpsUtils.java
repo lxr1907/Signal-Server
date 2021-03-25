@@ -132,6 +132,10 @@ public class HttpsUtils {
 		return JsonPost(urlString, JSONObject.toJSONString(content, SerializerFeature.DisableCircularReferenceDetect));
 	}
 
+	public static String JsonPost(String urlString,Map<String, String> headers , String content) {
+		return HttpsGo(urlString, METHOD_POST, headers, content.getBytes(DEF_CHARSET), DEF_CONNECT_TIMEOUT,
+				DEF_READ_TIMEOUT);
+	}
 	public static String JsonPost(String urlString, String content) {
 		Map<String, String> headers = new HashMap<String, String>(1);
 		headers.put("Content-Type", String.format("application/json; charset=%s", DEF_CHARSET.name()));
