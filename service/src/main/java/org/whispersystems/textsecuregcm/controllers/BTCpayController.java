@@ -29,11 +29,11 @@ public class BTCpayController {
 
     @GET
     @Path("/stores")
-    public Object stores() {
+    public Map stores() {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(TOKEN, TOKEN_VALUE);
         var ret = HttpsUtils.Get(BTCPAY_URL + GET_STORE, headers);
-        return JSON.parse(ret);
+        return JSON.parseObject(ret,Map.class);
     }
 
     @POST
