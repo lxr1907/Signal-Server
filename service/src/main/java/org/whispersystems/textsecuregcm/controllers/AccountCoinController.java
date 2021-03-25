@@ -15,6 +15,7 @@ import org.whispersystems.textsecuregcm.storage.AccountCoinBalance;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class AccountCoinController {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public AccountCoinBalance getAccountCoin(@Auth Account account, @Context SqlSession session) {
+    public List<AccountCoinBalance> getAccountCoin(@Auth Account account, @Context SqlSession session) {
         String uuid = account.getUuid().toString();
         AccountCoinBalanceMapper users = session.getMapper(AccountCoinBalanceMapper.class);
         AccountCoinBalance ret = users.findByUUid(uuid);
@@ -47,8 +48,9 @@ public class AccountCoinController {
             map.put("tableName", "accounts_coin_balance");
             users.insertBase(map);
         }
-        ret = users.findByUUid(uuid);
-        return ret;
+        List<AccountCoinBalance> list = new ArrayList<>();
+        list.add(users.findByUUid(uuid));
+        return list;
     }
 
     @Timed
