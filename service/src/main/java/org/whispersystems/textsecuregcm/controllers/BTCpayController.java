@@ -56,6 +56,16 @@ public class BTCpayController {
     }
 
     @GET
+    @Path("/stores/{storeId}/invoices/{invoiceId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Map> getAddress(@PathParam(value = "storeId") String storeId,@PathParam(value = "invoiceId") String invoiceId, @Auth Account account) {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put(TOKEN, TOKEN_VALUE);
+        var ret = HttpsUtils.Get(BTCPAY_URL + "/api/v1/stores/" + storeId + "/invoices/"+invoiceId+"/payment-methods", headers);
+        return JSON.parseArray(ret,Map.class);
+    }
+
+    @GET
     @Path("/invoices/{invoiceId}")
     @Produces(MediaType.APPLICATION_JSON)
     public List<Map> getInvoice(@PathParam(value = "invoiceId") String invoiceId, @Auth Account account, @Context SqlSession session) {
