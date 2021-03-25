@@ -38,7 +38,8 @@ public class BTCpayController {
     @POST
     @Path("/stores/{storeId}/invoices")
     @Produces(MediaType.APPLICATION_JSON)
-    public Map<String, String> createInvoice(@PathParam(value = "storeId") String storeId, @Auth Account account, @Context SqlSession session) {
+    public Map<String, String> createInvoice(@PathParam(value = "storeId") String storeId,
+                                             @Auth Account account, @Context SqlSession session) {
         String uuid = account.getUuid().toString();
         String orderid = UUID.randomUUID().toString();
         Map<String, String> headers = new HashMap<String, String>();
@@ -56,9 +57,10 @@ public class BTCpayController {
     }
 
     @GET
-    @Path("/stores/{storeId}/invoices/{invoiceId}")
+    @Path("/stores/{storeId}/invoices/{invoiceId}/payment-methods")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Map> getAddress(@PathParam(value = "storeId") String storeId,@PathParam(value = "invoiceId") String invoiceId, @Auth Account account) {
+    public List<Map> getAddress(@PathParam(value = "storeId") String storeId,
+                                @PathParam(value = "invoiceId") String invoiceId, @Auth Account account) {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(TOKEN, TOKEN_VALUE);
         var ret = HttpsUtils.Get(BTCPAY_URL + "/api/v1/stores/" + storeId + "/invoices/"+invoiceId+"/payment-methods", headers);
@@ -66,9 +68,11 @@ public class BTCpayController {
     }
 
     @GET
-    @Path("/invoices/{invoiceId}")
+    @Path("/stores/{storeId}/invoices/{invoiceId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public List<Map> getInvoice(@PathParam(value = "invoiceId") String invoiceId, @Auth Account account, @Context SqlSession session) {
+    public List<Map> getInvoice(@PathParam(value = "storeId") String storeId,
+                                @PathParam(value = "invoiceId") String invoiceId,
+                                @Auth Account account, @Context SqlSession session) {
         String uuid = account.getUuid().toString();
         AccountCoinBalanceMapper mapper = session.getMapper(AccountCoinBalanceMapper.class);
         Map<String, String> map = new HashMap<>();
