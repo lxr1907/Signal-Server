@@ -37,11 +37,12 @@ public class AccountCoinController {
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public List<AccountCoinBalance> getAccountCoin(@Auth Account account, @Context SqlSession session) {
+    public Map<String,Object>  getAccountCoin(@Auth Account account, @Context SqlSession session) {
+        Map<String,Object> ret=new HashMap<>();
         String uuid = account.getUuid().toString();
         AccountCoinBalanceMapper users = session.getMapper(AccountCoinBalanceMapper.class);
-        AccountCoinBalance ret = users.findByUUid(uuid);
-        if (ret == null) {
+        AccountCoinBalance sacBalance = users.findByUUid(uuid);
+        if (sacBalance == null) {
             Map<String, String> map = new HashMap<>();
             map.put("uuid", uuid);
             map.put("coin_name", "SAC");
@@ -49,10 +50,29 @@ public class AccountCoinController {
             users.insertBase(map);
         }
         List<AccountCoinBalance> list = new ArrayList<>();
-        list.add(users.findByUUid(uuid));
-        return list;
+         sacBalance= users.findByUUid(uuid);
+        sacBalance.setPercent("100.00");
+        sacBalance.setSymbol("ethusdt");
+        sacBalance.setPeriod("1day");
+        list.add(sacBalance);
+        list.add(generateAccountCoinBalance("BTC"));
+        list.add(generateAccountCoinBalance("DASH"));
+        list.add(generateAccountCoinBalance("ETH"));
+        list.add(generateAccountCoinBalance("LTC"));
+        ret.put("totalBalance",100);
+        ret.put("coin",list);
+        return ret;
     }
 
+    private AccountCoinBalance generateAccountCoinBalance(String coin_name) {
+        AccountCoinBalance accountCoinBalance = new AccountCoinBalance();
+        accountCoinBalance.setCoin_name(coin_name);
+        accountCoinBalance.setBalance("0");
+        accountCoinBalance.setPercent("0.00");
+        accountCoinBalance.setSymbol(coin_name.toLowerCase() + "usdt");
+        accountCoinBalance.setPeriod("1day");
+        return accountCoinBalance;
+    }
     @Timed
     @GET
     @Produces(MediaType.APPLICATION_JSON)

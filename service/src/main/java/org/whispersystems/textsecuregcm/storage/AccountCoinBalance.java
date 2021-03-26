@@ -52,6 +52,37 @@ public class AccountCoinBalance {
   @JsonProperty
   private String confirming_balance;
 
+  @JsonProperty
+  private String symbol;
+  @JsonProperty
+  private String period;
+  @JsonProperty
+  private String percent;
+
+  public String getPercent() {
+    return percent;
+  }
+
+  public void setPercent(String percent) {
+    this.percent = percent;
+  }
+
+  public String getSymbol() {
+    return symbol;
+  }
+
+  public void setSymbol(String symbol) {
+    this.symbol = symbol;
+  }
+
+  public String getPeriod() {
+    return period;
+  }
+
+  public void setPeriod(String period) {
+    this.period = period;
+  }
+
   public String getUuid() {
     return uuid;
   }
