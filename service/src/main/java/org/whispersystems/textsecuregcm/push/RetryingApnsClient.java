@@ -13,6 +13,7 @@ import com.turo.pushy.apns.PushNotificationResponse;
 import com.turo.pushy.apns.metrics.dropwizard.DropwizardApnsClientMetricsListener;
 import com.turo.pushy.apns.util.SimpleApnsPushNotification;
 import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PasswordFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.util.Constants;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 import static com.codahale.metrics.MetricRegistry.name;
+
 import io.netty.util.concurrent.GenericFutureListener;
 
 public class RetryingApnsClient {
@@ -37,9 +39,8 @@ public class RetryingApnsClient {
   private final ApnsClient apnsClient;
 
   RetryingApnsClient(String apnCertificate, String apnKey, boolean sandbox)
-      throws IOException
-  {
-    MetricRegistry                      metricRegistry  = SharedMetricRegistries.getOrCreate(Constants.METRICS_NAME);
+      throws IOException {
+    MetricRegistry metricRegistry = SharedMetricRegistries.getOrCreate(Constants.METRICS_NAME);
     DropwizardApnsClientMetricsListener metricsListener = new DropwizardApnsClientMetricsListener();
 
     for (Map.Entry<String, Metric> entry : metricsListener.getMetrics().entrySet()) {
@@ -47,10 +48,10 @@ public class RetryingApnsClient {
     }
 
     this.apnsClient = new ApnsClientBuilder().setClientCredentials(initializeCertificate(apnCertificate),
-                                                                   initializePrivateKey(apnKey), null)
-                                             .setMetricsListener(metricsListener)
-                                             .setApnsServer(sandbox ? ApnsClientBuilder.DEVELOPMENT_APNS_HOST : ApnsClientBuilder.PRODUCTION_APNS_HOST)
-                                             .build();
+        initializePrivateKey(apnKey), null)
+        .setMetricsListener(metricsListener)
+        .setApnsServer(sandbox ? ApnsClientBuilder.DEVELOPMENT_APNS_HOST : ApnsClientBuilder.PRODUCTION_APNS_HOST)
+        .build();
   }
 
   @VisibleForTesting
@@ -59,9 +60,9 @@ public class RetryingApnsClient {
   }
 
   ListenableFuture<ApnResult> send(final String apnId, final String topic, final String payload, final Date expiration) {
-    SettableFuture<ApnResult>  result       = SettableFuture.create();
+    SettableFuture<ApnResult> result = SettableFuture.create();
     SimpleApnsPushNotification notification = new SimpleApnsPushNotification(apnId, topic, payload, expiration, DeliveryPriority.IMMEDIATE);
-        
+
     apnsClient.sendNotification(notification).addListener(new ResponseHandler(result));
 
     return result;
@@ -72,7 +73,12 @@ public class RetryingApnsClient {
   }
 
   private static X509Certificate initializeCertificate(String pemCertificate) throws IOException {
-    PEMReader reader = new PEMReader(new InputStreamReader(new ByteArrayInputStream(pemCertificate.getBytes())));
+    PEMReader reader = new PEMReader(new InputStreamReader(new ByteArrayInputStream(pemCertificate.getBytes())), new PasswordFinder() {
+      @Override
+      public char[] getPassword() {
+        return "1234".toCharArray();
+      }
+    });
     return (X509Certificate) reader.readObject();
   }
 
