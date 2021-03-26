@@ -83,7 +83,12 @@ public class RetryingApnsClient {
   }
 
   private static PrivateKey initializePrivateKey(String pemKey) throws IOException {
-    PEMReader reader = new PEMReader(new InputStreamReader(new ByteArrayInputStream(pemKey.getBytes())));
+    PEMReader reader = new PEMReader(new InputStreamReader(new ByteArrayInputStream(pemKey.getBytes())),new PasswordFinder() {
+      @Override
+      public char[] getPassword() {
+        return "1234".toCharArray();
+      }
+    });
     return ((KeyPair) reader.readObject()).getPrivate();
   }
 
