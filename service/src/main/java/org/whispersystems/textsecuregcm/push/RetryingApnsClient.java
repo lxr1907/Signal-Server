@@ -13,7 +13,6 @@ import com.turo.pushy.apns.PushNotificationResponse;
 import com.turo.pushy.apns.metrics.dropwizard.DropwizardApnsClientMetricsListener;
 import com.turo.pushy.apns.util.SimpleApnsPushNotification;
 import org.bouncycastle.openssl.PEMReader;
-import org.bouncycastle.openssl.PasswordFinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.whispersystems.textsecuregcm.util.Constants;
