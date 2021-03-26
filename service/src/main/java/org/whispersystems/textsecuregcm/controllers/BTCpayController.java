@@ -1,6 +1,7 @@
 package org.whispersystems.textsecuregcm.controllers;
 
-import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.dropwizard.auth.Auth;
 import org.apache.ibatis.session.SqlSession;
 import org.whispersystems.textsecuregcm.mybatis.entity.BaseModel;
@@ -32,10 +33,11 @@ public class BTCpayController {
     @Path("/stores")
     @Produces(MediaType.APPLICATION_JSON)
     public ResponseEntity stores() {
+        ObjectMapper objectMapper = new ObjectMapper();
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(TOKEN, TOKEN_VALUE);
         var ret = HttpsUtils.Get(BTCPAY_URL + GET_STORE, headers);
-        return new ResponseEntity(JSON.parseArray(ret, Map.class));
+        return new ResponseEntity(ret);
     }
 
     @POST
@@ -43,7 +45,8 @@ public class BTCpayController {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     public ResponseEntity createInvoice(@PathParam(value = "storeId") String storeId,
-                                        @Auth Account account, @Context SqlSession session, Map<String, Object> body) {
+                                        @Auth Account account, @Context SqlSession session, Map<String, Object> body) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
         String uuid = account.getUuid().toString();
         //生成订单号
         String orderid = UUID.randomUUID().toString();
@@ -54,11 +57,11 @@ public class BTCpayController {
         headers.put("Content-Type", String.format("application/json; charset=%s", DEF_CHARSET.name()));
         String content = "";
         body.put("metadata", metadata);
-        content = JSON.toJSONString(body);
+        content = objectMapper.writeValueAsString(body);
         //生成btcpay订单
         var ret = HttpsUtils.JsonPost(BTCPAY_URL + "/api/v1/stores/" + storeId + "/invoices", headers, content);
         AccountCoinBalanceMapper mapper = session.getMapper(AccountCoinBalanceMapper.class);
-        Map<String, String> map = JSON.parseObject(ret, Map.class);
+        Map<String, String> map = objectMapper.readValue(ret,Map.class);
         map.put("uuid", uuid);
         map.put("orderid", orderid);
         map.put("tableName", BTCPAY_TABLE_NAME);
@@ -75,7 +78,7 @@ public class BTCpayController {
         Map<String, String> headers = new HashMap<String, String>();
         headers.put(TOKEN, TOKEN_VALUE);
         var ret = HttpsUtils.Get(BTCPAY_URL + "/api/v1/stores/" + storeId + "/invoices/" + invoiceId + "/payment-methods", headers);
-        return new ResponseEntity(JSON.parseArray(ret, Map.class), 1, 1, 10);
+        return new ResponseEntity(ret);
     }
 
     @GET
