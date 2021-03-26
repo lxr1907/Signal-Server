@@ -1,5 +1,8 @@
 package org.whispersystems.textsecuregcm.util;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -20,9 +23,6 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-
 public class HttpsUtils {
 
 	public static String METHOD_GET = "GET";
@@ -35,11 +35,12 @@ public class HttpsUtils {
 	public static void main(String[] args) {
 	}
 
-	public static JSONObject doGetAuthorization(String url) {
+	public static String doGetAuthorization(String url) {
+		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, String> headers = new HashMap<>();
 		headers.put("Authorization", "DC 454");
 		String xx = HttpsUtils.Get(url, headers);
-		return JSONObject.parseObject(xx);
+		return xx;
 	}
 
 	public static TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
@@ -128,8 +129,9 @@ public class HttpsUtils {
 				DEF_READ_TIMEOUT);
 	}
 
-	public static String JsonPost(String urlString, Object content) {
-		return JsonPost(urlString, JSONObject.toJSONString(content, SerializerFeature.DisableCircularReferenceDetect));
+	public static String JsonPost(String urlString, Object content) throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		return JsonPost(urlString, objectMapper.writeValueAsString(content));
 	}
 
 	public static String JsonPost(String urlString,Map<String, String> headers , String content) {
