@@ -99,20 +99,25 @@ public class KeysController {
       updateAccount = true;
     }
 
+    System.out.println("setKeys getSignedPreKey:"+preKeys.getSignedPreKey());
     if (!preKeys.getIdentityKey().equals(account.getIdentityKey())) {
       account.setIdentityKey(preKeys.getIdentityKey());
       updateAccount = true;
     }
 
+    System.out.println("setKeys getIdentityKey:"+preKeys.getIdentityKey());
     if (updateAccount) {
       accounts.update(account);
 
+      System.out.println("setKeys update account");
       if (!wasAccountEnabled && account.isEnabled()) {
         directoryQueue.addRegisteredUser(account.getUuid(), account.getNumber());
+        System.out.println("setKeys addRegisteredUser");
       }
     }
 
     keys.store(account.getNumber(), device.getId(), preKeys.getPreKeys());
+    System.out.println("setKeys  keys.store(account.getNumber(), device.getId(), preKeys.getPreKeys());");
   }
 
   @Timed

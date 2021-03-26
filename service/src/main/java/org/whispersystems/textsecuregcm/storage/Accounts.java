@@ -84,6 +84,8 @@ public class Accounts {
               .bind("data", mapper.writeValueAsString(account))
               .execute();
       } catch (JsonProcessingException e) {
+        e.printStackTrace();
+        System.out.println(e.getMessage());
         throw new IllegalArgumentException(e);
       }
     }));
