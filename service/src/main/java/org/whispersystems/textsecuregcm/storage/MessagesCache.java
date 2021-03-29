@@ -19,6 +19,7 @@ import org.whispersystems.textsecuregcm.util.Util;
 import org.whispersystems.textsecuregcm.websocket.WebsocketAddress;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
@@ -350,16 +351,21 @@ public class MessagesCache implements Managed {
       return (List<byte[]>)getQueues.execute(keys, args);
     }
 
-    List<Pair<byte[], Double>> getItems(byte[] queue, byte[] lock, int limit) {
+    List<Pair<byte[], Double>> getItems(byte[] queue, byte[] lock, int limit)  {
       List<byte[]> keys = Arrays.asList(queue, lock);
       List<byte[]> args = Collections.singletonList(String.valueOf(limit).getBytes());
 
       Iterator<byte[]>           results = ((List<byte[]>) getItems.execute(keys, args)).iterator();
       List<Pair<byte[], Double>> items   = new LinkedList<>();
 
-      while (results.hasNext()) {
-        items.add(new Pair<>(results.next(), Double.valueOf((results.next().toString()))));
-      }
+        while (results.hasNext()) {
+            byte[] next = results.next();
+            try {
+                items.add(new Pair<>(results.next(), Double.valueOf(new String(next, "UTF-8"))));
+            } catch (Exception e) {
+                System.out.println("getItems error Double.valueOf(new String(results.next(),\"UTF-8\"))),error byte:" + next);
+            }
+        }
 
       return items;
     }
