@@ -24,6 +24,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * 该版本用的是谷歌存储，我们暂时不用。我们用v2，亚马逊s3
+ */
 @Path("/v3/attachments")
 public class AttachmentControllerV3 extends AttachmentControllerBase {
 
