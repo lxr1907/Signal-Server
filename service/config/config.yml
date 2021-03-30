@@ -167,7 +167,7 @@ dataSourceFactory: # Postgresql database configuration
 
 apn: # Apple Push Notifications configuration
   bundleId: com.lxrtalk.seals
-  sandbox: true
+  sandbox: false
   pushCertificate: |
     -----BEGIN CERTIFICATE-----
     MIIGDzCCBPegAwIBAgIIdysCpb5PvL0wDQYJKoZIhvcNAQELBQAwgZYxCzAJBgNV
