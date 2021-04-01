@@ -130,17 +130,17 @@
             <artifactId>pushy</artifactId>
             <version>0.14.2</version>
         </dependency>
-        <dependency>
-            <groupId>com.turo</groupId>
-            <artifactId>pushy-dropwizard-metrics-listener</artifactId>
-            <version>0.13.7</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.dropwizard.metrics</groupId>
-                    <artifactId>metrics-core</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.turo</groupId>-->
+<!--            <artifactId>pushy-dropwizard-metrics-listener</artifactId>-->
+<!--            <version>0.13.7</version>-->
+<!--            <exclusions>-->
+<!--                <exclusion>-->
+<!--                    <groupId>io.dropwizard.metrics</groupId>-->
+<!--                    <artifactId>metrics-core</artifactId>-->
+<!--                </exclusion>-->
+<!--            </exclusions>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>io.dropwizard.modules</groupId>
             <artifactId>dropwizard-protobuf</artifactId>
@@ -178,12 +178,12 @@
             </exclusions>
         </dependency>
 
-        <dependency>
-            <groupId>com.opentable.components</groupId>
-            <artifactId>otj-pg-embedded</artifactId>
-            <version>0.13.3</version>
-            <scope>test</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.opentable.components</groupId>-->
+<!--            <artifactId>otj-pg-embedded</artifactId>-->
+<!--            <version>0.13.3</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.fasterxml.uuid</groupId>

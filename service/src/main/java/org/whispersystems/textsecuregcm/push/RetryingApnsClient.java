@@ -1,17 +1,17 @@
 package org.whispersystems.textsecuregcm.push;
 
-import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.SharedMetricRegistries;
+import com.eatthepath.pushy.apns.ApnsClient;
+import com.eatthepath.pushy.apns.ApnsClientBuilder;
+import com.eatthepath.pushy.apns.DeliveryPriority;
+import com.eatthepath.pushy.apns.PushNotificationResponse;
+import com.eatthepath.pushy.apns.util.SimpleApnsPushNotification;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-import com.turo.pushy.apns.ApnsClient;
-import com.turo.pushy.apns.ApnsClientBuilder;
-import com.turo.pushy.apns.DeliveryPriority;
-import com.turo.pushy.apns.PushNotificationResponse;
-import com.turo.pushy.apns.metrics.dropwizard.DropwizardApnsClientMetricsListener;
-import com.turo.pushy.apns.util.SimpleApnsPushNotification;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 import org.bouncycastle.openssl.PEMReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +23,11 @@ import java.io.InputStreamReader;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
 
 import static com.codahale.metrics.MetricRegistry.name;
-import io.netty.util.concurrent.GenericFutureListener;
 
 public class RetryingApnsClient {
 
@@ -40,15 +39,10 @@ public class RetryingApnsClient {
       throws IOException
   {
     MetricRegistry                      metricRegistry  = SharedMetricRegistries.getOrCreate(Constants.METRICS_NAME);
-    DropwizardApnsClientMetricsListener metricsListener = new DropwizardApnsClientMetricsListener();
 
-    for (Map.Entry<String, Metric> entry : metricsListener.getMetrics().entrySet()) {
-      metricRegistry.register(name(getClass(), entry.getKey()), entry.getValue());
-    }
 
     this.apnsClient = new ApnsClientBuilder().setClientCredentials(initializeCertificate(apnCertificate),
                                                                    initializePrivateKey(apnKey), null)
-                                             .setMetricsListener(metricsListener)
                                              .setApnsServer(sandbox ? ApnsClientBuilder.DEVELOPMENT_APNS_HOST : ApnsClientBuilder.PRODUCTION_APNS_HOST)
                                              .build();
   }
@@ -60,9 +54,10 @@ public class RetryingApnsClient {
 
   ListenableFuture<ApnResult> send(final String apnId, final String topic, final String payload, final Date expiration) {
     SettableFuture<ApnResult>  result       = SettableFuture.create();
-    SimpleApnsPushNotification notification = new SimpleApnsPushNotification(apnId, topic, payload, expiration, DeliveryPriority.IMMEDIATE);
+    SimpleApnsPushNotification notification = new SimpleApnsPushNotification(apnId, topic, payload,
+        Instant.ofEpochMilli(expiration.getTime()), DeliveryPriority.IMMEDIATE);
 
-    apnsClient.sendNotification(notification).addListener(new ResponseHandler(result));
+    apnsClient.sendNotification(notification);//.addListener(new ResponseHandler(result));
 
     return result;
   }
@@ -81,7 +76,7 @@ public class RetryingApnsClient {
     return ((KeyPair) reader.readObject()).getPrivate();
   }
 
-  private static final class ResponseHandler implements GenericFutureListener<io.netty.util.concurrent.Future<PushNotificationResponse<SimpleApnsPushNotification>>> {
+  private static final class ResponseHandler implements GenericFutureListener<Future<PushNotificationResponse<SimpleApnsPushNotification>>> {
 
     private final SettableFuture<ApnResult> future;
 
